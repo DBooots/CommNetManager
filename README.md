@@ -1,0 +1,3 @@
+# CommNetManager
+An implementation of KSP's CommNet that allows multiple CommNet mods to function alongside each other.
+More to come...
