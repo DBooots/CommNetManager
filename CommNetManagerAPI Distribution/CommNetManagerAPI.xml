@@ -1,0 +1,148 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>CommNetManagerAPI</name>
+    </assembly>
+    <members>
+        <member name="T:CommNetManagerAPI.CNMAttrAndOr">
+            <summary>
+            Method attribute used to specify if the method returning a bool should be joined to other cooperating methods using AND or OR.
+            <para>WARNING: Methods that implement 'OR' MUST NOT call base.method() in their body.</para>
+            <para>Since the stock method will be called anyway, methods should not call base.method() anyway in their body if they detect a CommNetManager installation.</para>
+            <para>Instead, methods implementing 'AND' should return true and methods implementing 'OR' should return false.</para>
+            <para>NOTE: Methods implementing 'OR' should generally also be marked 'PRE' and methods implementing 'AND' should generally be marked 'POST'.</para>
+            </summary>
+        </member>
+        <member name="F:CommNetManagerAPI.CNMAttrAndOr.op">
+            <exclude />
+        </member>
+        <member name="T:CommNetManagerAPI.CNMAttrAndOr.options">
+            <exclude />
+        </member>
+        <member name="F:CommNetManagerAPI.CNMAttrAndOr.options.AND">
+            <exclude />
+        </member>
+        <member name="F:CommNetManagerAPI.CNMAttrAndOr.options.OR">
+            <exclude />
+        </member>
+        <member name="M:CommNetManagerAPI.CNMAttrAndOr.#ctor(CommNetManagerAPI.CNMAttrAndOr.options)">
+            <summary>
+            Initializes a new instance of the <see cref="T:CommNetManagerAPI.CNMAttrAndOr"/> class.
+            </summary>
+            <param name="op">Enum specifying the option selected.</param>
+        </member>
+        <member name="T:CommNetManagerAPI.CNMAttrPrePost">
+            <summary>
+            Method attribute used to specify if the method should be called before or after the stock method.
+            <para>CAUTION: Methods should not call base.method() in their body if they detect a CommNetManager installation.</para>
+            </summary>
+        </member>
+        <member name="F:CommNetManagerAPI.CNMAttrPrePost.op">
+            <exclude />
+        </member>
+        <member name="T:CommNetManagerAPI.CNMAttrPrePost.options">
+            <exclude />
+        </member>
+        <member name="F:CommNetManagerAPI.CNMAttrPrePost.options.POST">
+            <exclude />
+        </member>
+        <member name="F:CommNetManagerAPI.CNMAttrPrePost.options.PRE">
+            <exclude />
+        </member>
+        <member name="M:CommNetManagerAPI.CNMAttrPrePost.#ctor(CommNetManagerAPI.CNMAttrPrePost.options)">
+            <summary>
+            Initializes a new instance of the <see cref="T:CommNetManagerAPI.CNMAttrPrePost"/> class.
+            </summary>
+            <param name="op">Enum specifying the option selected.</param>
+        </member>
+        <member name="T:CommNetManagerAPI.CommNetManagerChecker">
+            <summary>
+            Static API class to facilitate checking if CommNetManager is installed.
+            </summary>
+            <remarks>
+            Use <see cref="P:CommNetManagerAPI.CommNetManagerChecker.CommNetManagerInstalled"/> to determine if CommNetManager is installed.<para />
+            Use <see cref="M:CommNetManagerAPI.CommNetManagerChecker.SetCommNetManagerIfAvailable(CommNet.CommNetScenario)"/> to activate CommNetManager if it is installed.<para />
+            Use <see cref="M:CommNetManagerAPI.CommNetManagerChecker.GetCommNetManagerInstance"/> to get the handle to the current CommNetManagerNetwork instance.<para />
+            </remarks>
+        </member>
+        <member name="P:CommNetManagerAPI.CommNetManagerChecker.CommNetManagerInstalled">
+            <summary>
+            Checks if CommNetManager is installed.
+            </summary>
+            <returns>True if CommNetManager is installed.</returns>
+            <remarks>
+            Result is cached to minimize Reflection calls.
+            </remarks>
+        </member>
+        <member name="M:CommNetManagerAPI.CommNetManagerChecker.GetCommNetManagerInstance">
+            <summary>
+            Gets the current instance of the CommNetManagerNetwork.
+            </summary>
+            <returns>Null if CommNetManager is not installed.</returns>
+        </member>
+        <member name="M:CommNetManagerAPI.CommNetManagerChecker.BindToCommNetManager(CommNet.CommNetwork)">
+            <summary>
+            Binds the provided CommNetwork to the current CommNetManagerNetwork instance.
+            </summary>
+            <param name="bind">The derived CommNetwork instance which should be bound to CommNetManagerNetwork.</param>
+            <returns>True if succesful at binding, false if not.</returns>
+            <remarks>
+            This method links the protected fields inherited from CommNet.Network.Net<para />
+            <list type="bullet">
+            <listheader><description>CAUTION: When bound to CommNetManager, you should ensure the following methods do not call base.method():<para /></description></listheader>
+            <item><description>Add</description></item>
+            <item><description>Remove</description></item>
+            <item><description>Connect</description></item>
+            <item><description>Disconnect</description></item>
+            <item><description>Rebuild</description></item>
+            </list>
+            </remarks>
+        </member>
+        <member name="M:CommNetManagerAPI.CommNetManagerChecker.SetCommNetManagerIfAvailable(CommNet.CommNetScenario,System.Type,CommNet.CommNetNetwork@)">
+            <summary>
+            Sets the CommNetNetwork object to be CommNetManager if CommNetManager is installed or a supplied type if it is not.
+            </summary>
+            <param name="scenario">Your instance of CommNetScenario.</param>
+            <param name="derivativeOfCommNetNetwork">Type of your network to instantiate if CommNetManager is not installed.</param>
+            <param name="CustomCommNetNetwork">The handle of the CommNetNetwork object that is being implemented.</param>
+            <returns>True if CommNetManager or the supplied Net was instantiated, false if not.</returns>
+        </member>
+        <member name="M:CommNetManagerAPI.CommNetManagerChecker.SetCommNetManagerIfAvailable(CommNet.CommNetScenario,System.Type)">
+            <summary>
+            Sets the CommNetNetwork object to be CommNetManager if CommNetManager is installed or a supplied type if it is not.
+            </summary>
+            <param name="scenario">Your instance of CommNetScenario.</param>
+            <param name="derivativeOfCommNetNetwork">Type of your network to instantiate if CommNetManager is not installed.</param>
+            <returns>True if CommNetManager or the supplied Net was instantiated, False if not.</returns>
+        </member>
+        <member name="M:CommNetManagerAPI.CommNetManagerChecker.SetCommNetManagerIfAvailable(CommNet.CommNetScenario,CommNet.CommNetNetwork@)">
+            <summary>
+            Sets the CommNetNetwork object to be CommNetManager if CommNetManager is installed.
+            </summary>
+            <param name="scenario">Your instance of CommNetScenario.</param>
+            <param name="CustomCommNetNetwork">The handle of the CommNetNetwork object that is being implemented.</param>
+            <returns>True if CommNetManager or the supplied Net was instantiated, False if not.</returns>
+        </member>
+        <member name="M:CommNetManagerAPI.CommNetManagerChecker.SetCommNetManagerIfAvailable(CommNet.CommNetScenario)">
+            <summary>
+            Sets the CommNetNetwork object to be CommNetManager if CommNetManager is installed.
+            </summary>
+            <param name="scenario">Your instance of CommNetScenario.</param>
+            <returns>True if CommNetManager or the supplied Net was instantiated, False if not.</returns>
+        </member>
+        <member name="T:CommNetManagerAPI.CommNetManagerEvents">
+            <summary>
+            Contains custom GameEvents that fire before and after the network Update() method runs.
+            </summary>
+        </member>
+        <member name="F:CommNetManagerAPI.CommNetManagerEvents.onCommNetPreUpdate">
+            <summary>Fired at the beginning of the UpdateNetwork() method.</summary>
+        </member>
+        <member name="F:CommNetManagerAPI.CommNetManagerEvents.onCommNetPostUpdate">
+            <summary>Fired at the end of the UpdateNetwork() method.</summary>
+        </member>
+        <member name="M:CommNetManagerAPI.CommNetManagerEvents.Awake">
+            <summary>Registers the custom GameEvents. Do not attempt to link to them before this method is called.</summary>
+        </member>
+    </members>
+</doc>
