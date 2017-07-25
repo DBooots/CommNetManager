@@ -33,8 +33,8 @@ namespace CommNetManagerAPI
                     CommNetManager = CNMAssembly != null ? CNMAssembly.GetType("CommNetManager.CommNetManager", true) : null;
                     _CommNetManagerInstalled = !(CommNetManager == null);
                     CommNetManagerChecked = true;
+                    UnityEngine.Debug.Log("CommNetManager " + (_CommNetManagerInstalled ? "is" : "is not") + " installed.");
                 }
-                UnityEngine.Debug.Log("CommNetManager " + (_CommNetManagerInstalled ? "is" : "is not") + " installed.");
                 return _CommNetManagerInstalled;
             }
         }

@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace CommNetManagerAPI
+namespace CommNetManager
 {
     /// <summary>
     /// Contains custom GameEvents that fire before and after the network Update() method runs.
@@ -16,7 +16,7 @@ namespace CommNetManagerAPI
         /// <summary>Registers the custom GameEvents. Do not attempt to link to them before this method is called.</summary>
         public void Awake()
         {
-            Debug.Log("ReCoupler: Registering custom events.");
+            Debug.Log("CommNetManager: Registering custom events.");
             onCommNetPreUpdate = new EventData<CommNet.CommNetNetwork, CommNet.CommNetwork>("onCommNetPreUpdate");
             onCommNetPostUpdate = new EventData<CommNet.CommNetNetwork, CommNet.CommNetwork>("onCommNetPostUpdate");
         }
