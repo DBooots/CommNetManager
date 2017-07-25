@@ -44,7 +44,7 @@ namespace CommNetManager
                         case 0: return this.Pre;
                         case 1: return this.Post;
                         default:
-                            Debug.LogError("The provided int was out of range.");
+                            Debug.LogError("CommNetManager: The provided int was out of range.");
                             return null;
                     }
                 }
@@ -124,13 +124,17 @@ namespace CommNetManager
 
             foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
-                networkTypes.AddRange(assembly.GetTypes().Where(type => type.IsAssignableFrom(typeof(CommNetNetwork)) && !type.IsAbstract).ToList());
+                networkTypes.AddRange(assembly.GetTypes().Where(type => typeof(CommNetwork).IsAssignableFrom(type) && !type.IsAbstract).ToList());
             }
 
             foreach (Type type in networkTypes)
             {
+                Debug.Log("CommNetManager: Found a CommNetwork type: " + type.Name);
                 if (type == typeof(CommNetwork) || type == typeof(CommNetManagerNetwork))
+                {
+                    Debug.Log("CommNetManager: Skipping type " + type.Name);
                     continue;
+                }
 
                 MethodInfo[] methodsInType = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
 
@@ -170,7 +174,7 @@ namespace CommNetManager
         public CommNetManagerNetwork()
         {
             if (Instance != null)
-                Debug.LogWarning("CommNetManagerNetwork.Instance was not null.");
+                Debug.LogWarning("CommNetManager: CommNetManagerNetwork.Instance was not null.");
             Instance = this;
 
             commNetworks.Clear();
@@ -200,11 +204,31 @@ namespace CommNetManager
             {
                 CommNetManagerNetwork.Initiate();
             }
+            Debug.Log("CommNetManager: " + networkTypes.Count);
             foreach (Type type in networkTypes)
             {
-                CommNetwork typeNetworkInstance = Activator.CreateInstance(type) as CommNetwork;
+                if (type == typeof(CommNetwork) || type == typeof(CommNetManagerNetwork))
+                {
+                    Debug.Log("CommNetManager: Skipping type " + type.Name);
+                    continue;
+                }
+                CommNetwork typeNetworkInstance = null;
+                try
+                {
+                    typeNetworkInstance = Activator.CreateInstance(type) as CommNetwork;
+                }
+                catch(Exception ex)
+                {
+                    Debug.LogError("CommNetManager: Encountered an exception while calling the constructor for " + type.Name);
+                    Debug.LogError(ex);
+                }
                 if (typeNetworkInstance != null)
+                {
                     commNetworks.Add(type, typeNetworkInstance);
+                    Debug.Log("CommNetManager: Activated an instance of type: " + type.Name);
+                }
+                else
+                    Debug.LogWarning("CommNetManager: Failed to activate " + type.Name);
             }
             foreach (PrePostList<MethodInfo> methodList in methodsPrePost.Values)
             {
@@ -212,16 +236,16 @@ namespace CommNetManager
                 {
                     if (!commNetworks.ContainsKey(methodTypes[method]))
                     {
-                        Debug.LogWarning("No instance of the CommNetwork type ("+methodTypes[method].DeclaringType.FullName.ToString()+") was instantiated.");
+                        Debug.LogWarning("CommNetManager: No instance of the CommNetwork type (" + methodTypes[method].DeclaringType.FullName.ToString()+") was instantiated.");
                         continue;
                     }
                     ParseDelegates(method.Name, method, CNMAttrPrePost.options.PRE);
                 }
-                foreach (MethodInfo method in methodList.Pre)
+                foreach (MethodInfo method in methodList.Post)
                 {
                     if (!commNetworks.ContainsKey(methodTypes[method]))
                     {
-                        Debug.LogWarning("No instance of the CommNetwork type (" + methodTypes[method].DeclaringType.FullName.ToString() + ") was instantiated.");
+                        Debug.LogWarning("CommNetManager: No instance of the CommNetwork type (" + methodTypes[method].DeclaringType.FullName.ToString() + ") was instantiated.");
                         continue;
                     }
                     ParseDelegates(method.Name, method, CNMAttrPrePost.options.POST);
@@ -232,80 +256,92 @@ namespace CommNetManager
         private void ParseDelegates(string methodName, MethodInfo method, CNMAttrPrePost.options PrePost)
         {
             CommNetwork networkInstance = commNetworks[methodTypes[method]];
-            switch(methodName)
+            try
             {
-                case "SetNodeConnection":
-                    PrePost_SetNodeConnection.Add(PrePost, Delegate.CreateDelegate(typeof(Func<CommNode, CommNode, bool>), networkInstance, method) as Func<CommNode, CommNode, bool>);
-                    invokesAndOr.Add(PrePost_SetNodeConnection[PrePost].Last(), andOrList[method]);
-                    break;
-                case "Add_CommNode":
-                    PrePost_Add_CommNode.Add(PrePost, Delegate.CreateDelegate(typeof(Func<CommNode, CommNode>), networkInstance, method) as Func<CommNode, CommNode>);
-                    break;
-                case "Add_Occluder":
-                    PrePost_Add_Occluder.Add(PrePost, Delegate.CreateDelegate(typeof(Func<Occluder, Occluder>), networkInstance, method) as Func<Occluder, Occluder>);
-                    break;
-                case "Connect":
-                    PrePost_Connect.Add(PrePost, Delegate.CreateDelegate(typeof(Func<CommNode, CommNode, double, CommLink>), networkInstance, method) as Func<CommNode, CommNode, double, CommLink>);
-                    break;
-                case "CreateShortestPathTree":
-                    PrePost_CreateShortestPathTree.Add(PrePost, Delegate.CreateDelegate(typeof(Action<CommNode, CommNode>), networkInstance, method) as Action<CommNode, CommNode>);
-                    break;
-                case "Disconnect":
-                    PrePost_Disconnect.Add(PrePost, Delegate.CreateDelegate(typeof(Action<CommNode, CommNode, bool>), networkInstance, method) as Action<CommNode, CommNode, bool>);
-                    invokesAndOr.Add(PrePost_SetNodeConnection[PrePost].Last(), andOrList[method]);
-                    break;
-                case "FindClosestControlSource":
-                    PrePost_FindClosestControlSource.Add(PrePost, Delegate.CreateDelegate(typeof(Func<CommNode, CommPath, bool>), networkInstance, method) as Func<CommNode, CommPath, bool>);
-                    invokesAndOr.Add(PrePost_SetNodeConnection[PrePost].Last(), andOrList[method]);
-                    break;
-                case "FindClosestWhere":
-                    PrePost_FindClosestWhere.Add(PrePost, Delegate.CreateDelegate(typeof(Func<CommNode, CommPath, Func<CommNode, CommNode, bool>, CommNode>), networkInstance, method) as Func<CommNode, CommPath, Func<CommNode, CommNode, bool>, CommNode>);
-                    break;
-                case "FindHome":
-                    PrePost_FindHome.Add(PrePost, Delegate.CreateDelegate(typeof(Func<CommNode, CommPath, bool>), networkInstance, method) as Func<CommNode, CommPath, bool>);
-                    invokesAndOr.Add(PrePost_SetNodeConnection[PrePost].Last(), andOrList[method]);
-                    break;
-                case "FindPath":
-                    PrePost_FindPath.Add(PrePost, Delegate.CreateDelegate(typeof(Func<CommNode, CommPath, CommNode, bool>), networkInstance, method) as Func<CommNode, CommPath, CommNode, bool>);
-                    invokesAndOr.Add(PrePost_SetNodeConnection[PrePost].Last(), andOrList[method]);
-                    break;
-                case "GetLinkPoints":
-                    PrePost_GetLinkPoints.Add(PrePost, Delegate.CreateDelegate(typeof(Action<List<Vector3>>), networkInstance, method) as Action<List<Vector3>>);
-                    break;
-                case "PostUpdateNodes":
-                    PrePost_PostUpdateNodes.Add(PrePost, Delegate.CreateDelegate(typeof(Action), networkInstance, method) as Action);
-                    break;
-                case "PreUpdateNodes":
-                    PrePost_PreUpdateNodes.Add(PrePost, Delegate.CreateDelegate(typeof(Action), networkInstance, method) as Action);
-                    break;
-                case "Rebuild":
-                    PrePost_Rebuild.Add(PrePost, Delegate.CreateDelegate(typeof(Action), networkInstance, method) as Action);
-                    break;
-                case "Remove_CommNode":
-                    PrePost_Remove_CommNode.Add(PrePost, Delegate.CreateDelegate(typeof(Func<CommNode, bool>), networkInstance, method) as Func<CommNode, bool>);
-                    invokesAndOr.Add(PrePost_SetNodeConnection[PrePost].Last(), andOrList[method]);
-                    break;
-                case "Remove_Occluder":
-                    PrePost_Remove_Occluder.Add(PrePost, Delegate.CreateDelegate(typeof(Func<Occluder, bool>), networkInstance, method) as Func<Occluder, bool>);
-                    invokesAndOr.Add(PrePost_SetNodeConnection[PrePost].Last(), andOrList[method]);
-                    break;
-                case "TestOcclusion":
-                    PrePost_TestOcclusion.Add(PrePost, Delegate.CreateDelegate(typeof(Func<Vector3d, Occluder, Vector3d, Occluder, double, bool>), networkInstance, method) as Func<Vector3d, Occluder, Vector3d, Occluder, double, bool>);
-                    invokesAndOr.Add(PrePost_SetNodeConnection[PrePost].Last(), andOrList[method]);
-                    break;
-                case "TryConnect":
-                    PrePost_TryConnect.Add(PrePost, Delegate.CreateDelegate(typeof(Func<CommNode, CommNode, double, bool, bool, bool, bool>), networkInstance, method) as Func<CommNode, CommNode, double, bool, bool, bool, bool>);
-                    invokesAndOr.Add(PrePost_SetNodeConnection[PrePost].Last(), andOrList[method]);
-                    break;
-                case "UpdateNetwork":
-                    PrePost_UpdateNetwork.Add(PrePost, Delegate.CreateDelegate(typeof(Action), networkInstance, method) as Action);
-                    break;
-                case "UpdateShortestPath":
-                    PrePost_UpdateShortestPath.Add(PrePost, Delegate.CreateDelegate(typeof(Action<CommNode, CommNode, CommLink, double, CommNode, CommNode>), networkInstance, method) as Action<CommNode, CommNode, CommLink, double, CommNode, CommNode>);
-                    break;
-                case "UpdateShortestWhere":
-                    PrePost_UpdateShortestWhere.Add(PrePost, Delegate.CreateDelegate(typeof(Func<CommNode, CommNode, CommLink, double, CommNode, Func<CommNode, CommNode, bool>, CommNode>), networkInstance, method) as Func<CommNode, CommNode, CommLink, double, CommNode, Func<CommNode, CommNode, bool>, CommNode>);
-                    break;
+                switch (methodName)
+                {
+                    case "SetNodeConnection":
+                        PrePost_SetNodeConnection.Add(PrePost, Delegate.CreateDelegate(typeof(Func<CommNode, CommNode, bool>), networkInstance, method) as Func<CommNode, CommNode, bool>);
+                        invokesAndOr.Add(PrePost_SetNodeConnection[PrePost].Last(), andOrList[method]);
+                        break;
+                    case "Add_CommNode":
+                        PrePost_Add_CommNode.Add(PrePost, Delegate.CreateDelegate(typeof(Func<CommNode, CommNode>), networkInstance, method) as Func<CommNode, CommNode>);
+                        break;
+                    case "Add_Occluder":
+                        PrePost_Add_Occluder.Add(PrePost, Delegate.CreateDelegate(typeof(Func<Occluder, Occluder>), networkInstance, method) as Func<Occluder, Occluder>);
+                        break;
+                    case "Connect":
+                        PrePost_Connect.Add(PrePost, Delegate.CreateDelegate(typeof(Func<CommNode, CommNode, double, CommLink>), networkInstance, method) as Func<CommNode, CommNode, double, CommLink>);
+                        break;
+                    case "CreateShortestPathTree":
+                        PrePost_CreateShortestPathTree.Add(PrePost, Delegate.CreateDelegate(typeof(Action<CommNode, CommNode>), networkInstance, method) as Action<CommNode, CommNode>);
+                        break;
+                    case "Disconnect":
+                        PrePost_Disconnect.Add(PrePost, Delegate.CreateDelegate(typeof(Action<CommNode, CommNode, bool>), networkInstance, method) as Action<CommNode, CommNode, bool>);
+                        invokesAndOr.Add(PrePost_SetNodeConnection[PrePost].Last(), andOrList[method]);
+                        break;
+                    case "FindClosestControlSource":
+                        PrePost_FindClosestControlSource.Add(PrePost, Delegate.CreateDelegate(typeof(Func<CommNode, CommPath, bool>), networkInstance, method) as Func<CommNode, CommPath, bool>);
+                        invokesAndOr.Add(PrePost_SetNodeConnection[PrePost].Last(), andOrList[method]);
+                        break;
+                    case "FindClosestWhere":
+                        PrePost_FindClosestWhere.Add(PrePost, Delegate.CreateDelegate(typeof(Func<CommNode, CommPath, Func<CommNode, CommNode, bool>, CommNode>), networkInstance, method) as Func<CommNode, CommPath, Func<CommNode, CommNode, bool>, CommNode>);
+                        break;
+                    case "FindHome":
+                        PrePost_FindHome.Add(PrePost, Delegate.CreateDelegate(typeof(Func<CommNode, CommPath, bool>), networkInstance, method) as Func<CommNode, CommPath, bool>);
+                        invokesAndOr.Add(PrePost_SetNodeConnection[PrePost].Last(), andOrList[method]);
+                        break;
+                    case "FindPath":
+                        PrePost_FindPath.Add(PrePost, Delegate.CreateDelegate(typeof(Func<CommNode, CommPath, CommNode, bool>), networkInstance, method) as Func<CommNode, CommPath, CommNode, bool>);
+                        invokesAndOr.Add(PrePost_SetNodeConnection[PrePost].Last(), andOrList[method]);
+                        break;
+                    case "GetLinkPoints":
+                        PrePost_GetLinkPoints.Add(PrePost, Delegate.CreateDelegate(typeof(Action<List<Vector3>>), networkInstance, method) as Action<List<Vector3>>);
+                        break;
+                    case "PostUpdateNodes":
+                        PrePost_PostUpdateNodes.Add(PrePost, Delegate.CreateDelegate(typeof(Action), networkInstance, method) as Action);
+                        break;
+                    case "PreUpdateNodes":
+                        PrePost_PreUpdateNodes.Add(PrePost, Delegate.CreateDelegate(typeof(Action), networkInstance, method) as Action);
+                        break;
+                    case "Rebuild":
+                        PrePost_Rebuild.Add(PrePost, Delegate.CreateDelegate(typeof(Action), networkInstance, method) as Action);
+                        break;
+                    case "Remove_CommNode":
+                        PrePost_Remove_CommNode.Add(PrePost, Delegate.CreateDelegate(typeof(Func<CommNode, bool>), networkInstance, method) as Func<CommNode, bool>);
+                        invokesAndOr.Add(PrePost_SetNodeConnection[PrePost].Last(), andOrList[method]);
+                        break;
+                    case "Remove_Occluder":
+                        PrePost_Remove_Occluder.Add(PrePost, Delegate.CreateDelegate(typeof(Func<Occluder, bool>), networkInstance, method) as Func<Occluder, bool>);
+                        invokesAndOr.Add(PrePost_SetNodeConnection[PrePost].Last(), andOrList[method]);
+                        break;
+                    case "TestOcclusion":
+                        PrePost_TestOcclusion.Add(PrePost, Delegate.CreateDelegate(typeof(Func<Vector3d, Occluder, Vector3d, Occluder, double, bool>), networkInstance, method) as Func<Vector3d, Occluder, Vector3d, Occluder, double, bool>);
+                        invokesAndOr.Add(PrePost_SetNodeConnection[PrePost].Last(), andOrList[method]);
+                        break;
+                    case "TryConnect":
+                        PrePost_TryConnect.Add(PrePost, Delegate.CreateDelegate(typeof(Func<CommNode, CommNode, double, bool, bool, bool, bool>), networkInstance, method) as Func<CommNode, CommNode, double, bool, bool, bool, bool>);
+                        invokesAndOr.Add(PrePost_SetNodeConnection[PrePost].Last(), andOrList[method]);
+                        break;
+                    case "UpdateNetwork":
+                        PrePost_UpdateNetwork.Add(PrePost, Delegate.CreateDelegate(typeof(Action), networkInstance, method) as Action);
+                        break;
+                    case "UpdateShortestPath":
+                        PrePost_UpdateShortestPath.Add(PrePost, Delegate.CreateDelegate(typeof(Action<CommNode, CommNode, CommLink, double, CommNode, CommNode>), networkInstance, method) as Action<CommNode, CommNode, CommLink, double, CommNode, CommNode>);
+                        break;
+                    case "UpdateShortestWhere":
+                        PrePost_UpdateShortestWhere.Add(PrePost, Delegate.CreateDelegate(typeof(Func<CommNode, CommNode, CommLink, double, CommNode, Func<CommNode, CommNode, bool>, CommNode>), networkInstance, method) as Func<CommNode, CommNode, CommLink, double, CommNode, Func<CommNode, CommNode, bool>, CommNode>);
+                        break;
+                    default:
+                        Debug.LogWarning("CommNetManager: The method passed (" + methodName + ") was not a standard CommNet method.");
+                        return;
+                }
+                Debug.Log("CommNetManager: Successfully parsed " + methodName + " from type " + networkInstance.GetType().Name);
+            }
+            catch(Exception ex)
+            {
+                Debug.LogError("CommNetManager: Encountered an error creating a delegate for " + methodName + " from type " + networkInstance.GetType().Name);
+                Debug.LogError(ex);
             }
         }
 
@@ -333,21 +369,25 @@ namespace CommNetManager
         protected override bool SetNodeConnection(CommNode a, CommNode b)
         {
             bool value;
-
             if (PrePost_SetNodeConnection.Pre.Count > 0)
             {
-                value = PrePost_SetNodeConnection.Pre[0].Invoke(a, b);
+                try { value = PrePost_SetNodeConnection.Pre[0].Invoke(a, b); }
+                catch (Exception ex) { Debug.LogError(ex); value = true; }
                 for (int i = 1; i < PrePost_SetNodeConnection.Pre.Count; i++)
                 {
-                    switch (invokesAndOr[PrePost_SetNodeConnection.Pre[i]])
+                    try
                     {
-                        case CNMAttrAndOr.options.AND:
-                            value &= PrePost_SetNodeConnection.Pre[i].Invoke(a, b);
-                            break;
-                        case CNMAttrAndOr.options.OR:
-                            value |= PrePost_SetNodeConnection.Pre[i].Invoke(a, b);
-                            break;
+                        switch (invokesAndOr[PrePost_SetNodeConnection.Pre[i]])
+                        {
+                            case CNMAttrAndOr.options.AND:
+                                value &= PrePost_SetNodeConnection.Pre[i].Invoke(a, b);
+                                break;
+                            case CNMAttrAndOr.options.OR:
+                                value |= PrePost_SetNodeConnection.Pre[i].Invoke(a, b);
+                                break;
+                        }
                     }
+                    catch (Exception ex) { Debug.LogError(ex); }
                 }
                 value |= base.SetNodeConnection(a, b);
             }
@@ -358,15 +398,19 @@ namespace CommNetManager
 
             for (int i = 1; i < PrePost_SetNodeConnection.Post.Count; i++)
             {
-                switch (invokesAndOr[PrePost_SetNodeConnection.Post[i]])
+                try
                 {
-                    case CNMAttrAndOr.options.AND:
-                        value &= PrePost_SetNodeConnection.Post[i].Invoke(a, b);
-                        break;
-                    case CNMAttrAndOr.options.OR:
-                        value |= PrePost_SetNodeConnection.Post[i].Invoke(a, b);
-                        break;
+                    switch (invokesAndOr[PrePost_SetNodeConnection.Post[i]])
+                    {
+                        case CNMAttrAndOr.options.AND:
+                            value &= PrePost_SetNodeConnection.Post[i].Invoke(a, b);
+                            break;
+                        case CNMAttrAndOr.options.OR:
+                            value |= PrePost_SetNodeConnection.Post[i].Invoke(a, b);
+                            break;
+                    }
                 }
+                catch (Exception ex) { Debug.LogError(ex); }
             }
 
             return value;
@@ -378,14 +422,16 @@ namespace CommNetManager
 
             for (int i = 0; i < PrePost_Add_CommNode.Pre.Count; i++)
             {
-                PrePost_Add_CommNode.Pre[i].Invoke(conn);
+                try { PrePost_Add_CommNode.Pre[i].Invoke(conn); }
+                catch (Exception ex) { Debug.LogError(ex); }
             }
 
             value = base.Add(conn);
 
             for (int i = 0; i < PrePost_Add_CommNode.Post.Count; i++)
             {
-                PrePost_Add_CommNode.Post[i].Invoke(conn);
+                try { PrePost_Add_CommNode.Post[i].Invoke(conn); }
+                catch (Exception ex) { Debug.LogError(ex); }
             }
 
             return value;
@@ -397,14 +443,16 @@ namespace CommNetManager
 
             for (int i = 0; i < PrePost_Add_Occluder.Pre.Count; i++)
             {
-                PrePost_Add_Occluder.Pre[i].Invoke(conn);
+                try { PrePost_Add_Occluder.Pre[i].Invoke(conn); }
+                catch (Exception ex) { Debug.LogError(ex); }
             }
 
             value = base.Add(conn);
 
             for (int i = 0; i < PrePost_Add_Occluder.Post.Count; i++)
             {
-                PrePost_Add_Occluder.Post[i].Invoke(conn);
+                try { PrePost_Add_Occluder.Post[i].Invoke(conn); }
+                catch (Exception ex) { Debug.LogError(ex); }
             }
 
             return value;
@@ -416,14 +464,16 @@ namespace CommNetManager
 
             for (int i = 0; i < PrePost_Connect.Pre.Count; i++)
             {
-                PrePost_Connect.Pre[i].Invoke(a, b, distance);
+                try { PrePost_Connect.Pre[i].Invoke(a, b, distance); }
+                catch (Exception ex) { Debug.LogError(ex); }
             }
 
             value = base.Connect(a, b, distance);
 
             for (int i = 0; i < PrePost_Connect.Post.Count; i++)
             {
-                PrePost_Connect.Post[i].Invoke(a, b, distance);
+                try { PrePost_Connect.Post[i].Invoke(a, b, distance); }
+                catch (Exception ex) { Debug.LogError(ex); }
             }
 
             return value;
@@ -433,14 +483,16 @@ namespace CommNetManager
         {
             for (int i = 0; i < PrePost_CreateShortestPathTree.Pre.Count; i++)
             {
-                PrePost_CreateShortestPathTree.Pre[i].Invoke(start, end);
+                try { PrePost_CreateShortestPathTree.Pre[i].Invoke(start, end); }
+                catch (Exception ex) { Debug.LogError(ex); }
             }
 
             base.CreateShortestPathTree(start, end);
 
             for (int i = 0; i < PrePost_CreateShortestPathTree.Post.Count; i++)
             {
-                PrePost_CreateShortestPathTree.Post[i].Invoke(start, end);
+                try { PrePost_CreateShortestPathTree.Post[i].Invoke(start, end); }
+                catch (Exception ex) { Debug.LogError(ex); }
             }
         }
 
@@ -448,14 +500,16 @@ namespace CommNetManager
         {
             for (int i = 0; i < PrePost_Disconnect.Pre.Count; i++)
             {
-                PrePost_Disconnect.Pre[i].Invoke(a, b, removeFromA);
+                try { PrePost_Disconnect.Pre[i].Invoke(a, b, removeFromA); }
+                catch (Exception ex) { Debug.LogError(ex); }
             }
 
             base.Disconnect(a, b, removeFromA);
 
             for (int i = 0; i < PrePost_Disconnect.Post.Count; i++)
             {
-                PrePost_Disconnect.Post[i].Invoke(a, b, removeFromA);
+                try { PrePost_Disconnect.Post[i].Invoke(a, b, removeFromA); }
+                catch (Exception ex) { Debug.LogError(ex); }
             }
         }
 
@@ -465,18 +519,23 @@ namespace CommNetManager
 
             if (PrePost_FindClosestControlSource.Pre.Count > 0)
             {
-                value = PrePost_FindClosestControlSource.Pre[0].Invoke(from, path);
+                try { value = PrePost_FindClosestControlSource.Pre[0].Invoke(from, path); }
+                catch (Exception ex) { Debug.LogError(ex); value = true; }
                 for (int i = 1; i < PrePost_FindClosestControlSource.Pre.Count; i++)
                 {
-                    switch (invokesAndOr[PrePost_FindClosestControlSource.Pre[i]])
+                    try
                     {
-                        case CNMAttrAndOr.options.AND:
-                            value &= PrePost_FindClosestControlSource.Pre[i].Invoke(from, path);
-                            break;
-                        case CNMAttrAndOr.options.OR:
-                            value |= PrePost_FindClosestControlSource.Pre[i].Invoke(from, path);
-                            break;
+                        switch (invokesAndOr[PrePost_FindClosestControlSource.Pre[i]])
+                        {
+                            case CNMAttrAndOr.options.AND:
+                                value &= PrePost_FindClosestControlSource.Pre[i].Invoke(from, path);
+                                break;
+                            case CNMAttrAndOr.options.OR:
+                                value |= PrePost_FindClosestControlSource.Pre[i].Invoke(from, path);
+                                break;
+                        }
                     }
+                    catch (Exception ex) { Debug.LogError(ex); }
                 }
                 value |= base.FindClosestControlSource(from, path);
             }
@@ -487,15 +546,19 @@ namespace CommNetManager
 
             for (int i = 1; i < PrePost_FindClosestControlSource.Post.Count; i++)
             {
-                switch (invokesAndOr[PrePost_FindClosestControlSource.Post[i]])
+                try
                 {
-                    case CNMAttrAndOr.options.AND:
-                        value &= PrePost_FindClosestControlSource.Post[i].Invoke(from, path);
-                        break;
-                    case CNMAttrAndOr.options.OR:
-                        value |= PrePost_FindClosestControlSource.Post[i].Invoke(from, path);
-                        break;
+                    switch (invokesAndOr[PrePost_FindClosestControlSource.Post[i]])
+                    {
+                        case CNMAttrAndOr.options.AND:
+                            value &= PrePost_FindClosestControlSource.Post[i].Invoke(from, path);
+                            break;
+                        case CNMAttrAndOr.options.OR:
+                            value |= PrePost_FindClosestControlSource.Post[i].Invoke(from, path);
+                            break;
+                    }
                 }
+                catch (Exception ex) { Debug.LogError(ex); }
             }
 
             return value;
@@ -507,14 +570,16 @@ namespace CommNetManager
 
             for (int i = 0; i < PrePost_FindClosestWhere.Pre.Count; i++)
             {
-                PrePost_FindClosestWhere.Pre[i].Invoke(start, path, where);
+                try { PrePost_FindClosestWhere.Pre[i].Invoke(start, path, where); }
+                catch (Exception ex) { Debug.LogError(ex); }
             }
 
             value = base.FindClosestWhere(start, path, where);
 
             for (int i = 0; i < PrePost_FindClosestWhere.Post.Count; i++)
             {
-                PrePost_FindClosestWhere.Post[i].Invoke(start, path, where);
+                try { PrePost_FindClosestWhere.Post[i].Invoke(start, path, where); }
+                catch (Exception ex) { Debug.LogError(ex); }
             }
 
             return value;
@@ -526,18 +591,23 @@ namespace CommNetManager
 
             if (PrePost_FindHome.Pre.Count > 0)
             {
-                value = PrePost_FindHome.Pre[0].Invoke(from, path);
+                try { value = PrePost_FindHome.Pre[0].Invoke(from, path); }
+                catch (Exception ex) { Debug.LogError(ex); value = true; }
                 for (int i = 1; i < PrePost_FindHome.Pre.Count; i++)
                 {
-                    switch (invokesAndOr[PrePost_FindHome.Pre[i]])
+                    try
                     {
-                        case CNMAttrAndOr.options.AND:
-                            value &= PrePost_FindHome.Pre[i].Invoke(from, path);
-                            break;
-                        case CNMAttrAndOr.options.OR:
-                            value |= PrePost_FindHome.Pre[i].Invoke(from, path);
-                            break;
+                        switch (invokesAndOr[PrePost_FindHome.Pre[i]])
+                        {
+                            case CNMAttrAndOr.options.AND:
+                                value &= PrePost_FindHome.Pre[i].Invoke(from, path);
+                                break;
+                            case CNMAttrAndOr.options.OR:
+                                value |= PrePost_FindHome.Pre[i].Invoke(from, path);
+                                break;
+                        }
                     }
+                    catch (Exception ex) { Debug.LogError(ex); }
                 }
                 value |= base.FindHome(from, path);
             }
@@ -548,15 +618,19 @@ namespace CommNetManager
 
             for (int i = 1; i < PrePost_FindHome.Post.Count; i++)
             {
-                switch (invokesAndOr[PrePost_FindHome.Post[i]])
+                try
                 {
-                    case CNMAttrAndOr.options.AND:
-                        value &= PrePost_FindHome.Post[i].Invoke(from, path);
-                        break;
-                    case CNMAttrAndOr.options.OR:
-                        value |= PrePost_FindHome.Post[i].Invoke(from, path);
-                        break;
+                    switch (invokesAndOr[PrePost_FindHome.Post[i]])
+                    {
+                        case CNMAttrAndOr.options.AND:
+                            value &= PrePost_FindHome.Post[i].Invoke(from, path);
+                            break;
+                        case CNMAttrAndOr.options.OR:
+                            value |= PrePost_FindHome.Post[i].Invoke(from, path);
+                            break;
+                    }
                 }
+                catch (Exception ex) { Debug.LogError(ex); }
             }
 
             return value;
@@ -568,18 +642,23 @@ namespace CommNetManager
 
             if (PrePost_FindPath.Pre.Count > 0)
             {
-                value = PrePost_FindPath.Pre[0].Invoke(start, path, end);
+                try { value = PrePost_FindPath.Pre[0].Invoke(start, path, end); }
+                catch (Exception ex) { Debug.LogError(ex); value = true; }
                 for (int i = 1; i < PrePost_FindPath.Pre.Count; i++)
                 {
-                    switch (invokesAndOr[PrePost_FindPath.Pre[i]])
+                    try
                     {
-                        case CNMAttrAndOr.options.AND:
-                            value &= PrePost_FindPath.Pre[i].Invoke(start, path, end);
-                            break;
-                        case CNMAttrAndOr.options.OR:
-                            value |= PrePost_FindPath.Pre[i].Invoke(start, path, end);
-                            break;
+                        switch (invokesAndOr[PrePost_FindPath.Pre[i]])
+                        {
+                            case CNMAttrAndOr.options.AND:
+                                value &= PrePost_FindPath.Pre[i].Invoke(start, path, end);
+                                break;
+                            case CNMAttrAndOr.options.OR:
+                                value |= PrePost_FindPath.Pre[i].Invoke(start, path, end);
+                                break;
+                        }
                     }
+                    catch (Exception ex) { Debug.LogError(ex); }
                 }
                 value |= base.FindPath(start, path, end);
             }
@@ -590,15 +669,19 @@ namespace CommNetManager
 
             for (int i = 1; i < PrePost_FindPath.Post.Count; i++)
             {
-                switch (invokesAndOr[PrePost_FindPath.Post[i]])
+                try
                 {
-                    case CNMAttrAndOr.options.AND:
-                        value &= PrePost_FindPath.Post[i].Invoke(start, path, end);
-                        break;
-                    case CNMAttrAndOr.options.OR:
-                        value |= PrePost_FindPath.Post[i].Invoke(start, path, end);
-                        break;
+                    switch (invokesAndOr[PrePost_FindPath.Post[i]])
+                    {
+                        case CNMAttrAndOr.options.AND:
+                            value &= PrePost_FindPath.Post[i].Invoke(start, path, end);
+                            break;
+                        case CNMAttrAndOr.options.OR:
+                            value |= PrePost_FindPath.Post[i].Invoke(start, path, end);
+                            break;
+                    }
                 }
+                catch (Exception ex) { Debug.LogError(ex); }
             }
 
             return value;
@@ -608,14 +691,16 @@ namespace CommNetManager
         {
             for (int i = 0; i < PrePost_GetLinkPoints.Pre.Count; i++)
             {
-                PrePost_GetLinkPoints.Pre[i].Invoke(discreteLines);
+                try { PrePost_GetLinkPoints.Pre[i].Invoke(discreteLines); }
+                catch (Exception ex) { Debug.LogError(ex); }
             }
 
             base.GetLinkPoints(discreteLines);
 
             for (int i = 0; i < PrePost_GetLinkPoints.Post.Count; i++)
             {
-                PrePost_GetLinkPoints.Post[i].Invoke(discreteLines);
+                try { PrePost_GetLinkPoints.Post[i].Invoke(discreteLines); }
+                catch (Exception ex) { Debug.LogError(ex); }
             }
         }
 
@@ -623,14 +708,16 @@ namespace CommNetManager
         {
             for (int i = 0; i < PrePost_PostUpdateNodes.Pre.Count; i++)
             {
-                PrePost_PostUpdateNodes.Pre[i].Invoke();
+                try { PrePost_PostUpdateNodes.Pre[i].Invoke(); }
+                catch (Exception ex) { Debug.LogError(ex); }
             }
 
             base.PostUpdateNodes();
 
             for (int i = 0; i < PrePost_PostUpdateNodes.Post.Count; i++)
             {
-                PrePost_PostUpdateNodes.Post[i].Invoke();
+                try { PrePost_PostUpdateNodes.Post[i].Invoke(); }
+                catch (Exception ex) { Debug.LogError(ex); }
             }
         }
 
@@ -638,14 +725,16 @@ namespace CommNetManager
         {
             for (int i = 0; i < PrePost_PreUpdateNodes.Pre.Count; i++)
             {
-                PrePost_PreUpdateNodes.Pre[i].Invoke();
+                try { PrePost_PreUpdateNodes.Pre[i].Invoke(); }
+                catch (Exception ex) { Debug.LogError(ex); }
             }
 
             base.PreUpdateNodes();
 
             for (int i = 0; i < PrePost_PreUpdateNodes.Post.Count; i++)
             {
-                PrePost_PreUpdateNodes.Post[i].Invoke();
+                try { PrePost_PreUpdateNodes.Post[i].Invoke(); }
+                catch (Exception ex) { Debug.LogError(ex); }
             }
         }
 
@@ -653,14 +742,16 @@ namespace CommNetManager
         {
             for (int i = 0; i < PrePost_Rebuild.Pre.Count; i++)
             {
-                PrePost_Rebuild.Pre[i].Invoke();
+                try { PrePost_Rebuild.Pre[i].Invoke(); }
+                catch (Exception ex) { Debug.LogError(ex); }
             }
 
             base.Rebuild();
 
             for (int i = 0; i < PrePost_Rebuild.Post.Count; i++)
             {
-                PrePost_Rebuild.Post[i].Invoke();
+                try { PrePost_Rebuild.Post[i].Invoke(); }
+                catch (Exception ex) { Debug.LogError(ex); }
             }
         }
 
@@ -670,18 +761,23 @@ namespace CommNetManager
 
             if (PrePost_Remove_CommNode.Pre.Count > 0)
             {
-                value = PrePost_Remove_CommNode.Pre[0].Invoke(conn);
+                try { value = PrePost_Remove_CommNode.Pre[0].Invoke(conn); }
+                catch (Exception ex) { Debug.LogError(ex); value = true; }
                 for (int i = 1; i < PrePost_Remove_CommNode.Pre.Count; i++)
                 {
-                    switch (invokesAndOr[PrePost_Remove_CommNode.Pre[i]])
+                    try
                     {
-                        case CNMAttrAndOr.options.AND:
-                            value &= PrePost_Remove_CommNode.Pre[i].Invoke(conn);
-                            break;
-                        case CNMAttrAndOr.options.OR:
-                            value |= PrePost_Remove_CommNode.Pre[i].Invoke(conn);
-                            break;
+                        switch (invokesAndOr[PrePost_Remove_CommNode.Pre[i]])
+                        {
+                            case CNMAttrAndOr.options.AND:
+                                value &= PrePost_Remove_CommNode.Pre[i].Invoke(conn);
+                                break;
+                            case CNMAttrAndOr.options.OR:
+                                value |= PrePost_Remove_CommNode.Pre[i].Invoke(conn);
+                                break;
+                        }
                     }
+                    catch (Exception ex) { Debug.LogError(ex); }
                 }
                 value |= base.Remove(conn);
             }
@@ -692,15 +788,19 @@ namespace CommNetManager
 
             for (int i = 1; i < PrePost_Remove_CommNode.Post.Count; i++)
             {
-                switch (invokesAndOr[PrePost_Remove_CommNode.Post[i]])
+                try
                 {
-                    case CNMAttrAndOr.options.AND:
-                        value &= PrePost_Remove_CommNode.Post[i].Invoke(conn);
-                        break;
-                    case CNMAttrAndOr.options.OR:
-                        value |= PrePost_Remove_CommNode.Post[i].Invoke(conn);
-                        break;
+                    switch (invokesAndOr[PrePost_Remove_CommNode.Post[i]])
+                    {
+                        case CNMAttrAndOr.options.AND:
+                            value &= PrePost_Remove_CommNode.Post[i].Invoke(conn);
+                            break;
+                        case CNMAttrAndOr.options.OR:
+                            value |= PrePost_Remove_CommNode.Post[i].Invoke(conn);
+                            break;
+                    }
                 }
+                catch (Exception ex) { Debug.LogError(ex); }
             }
 
             return value;
@@ -712,18 +812,23 @@ namespace CommNetManager
 
             if (PrePost_Remove_Occluder.Pre.Count > 0)
             {
-                value = PrePost_Remove_Occluder.Pre[0].Invoke(conn);
+                try { value = PrePost_Remove_Occluder.Pre[0].Invoke(conn); }
+                catch (Exception ex) { Debug.LogError(ex); value = true; }
                 for (int i = 1; i < PrePost_Remove_Occluder.Pre.Count; i++)
                 {
-                    switch (invokesAndOr[PrePost_Remove_Occluder.Pre[i]])
+                    try
                     {
-                        case CNMAttrAndOr.options.AND:
-                            value &= PrePost_Remove_Occluder.Pre[i].Invoke(conn);
-                            break;
-                        case CNMAttrAndOr.options.OR:
-                            value |= PrePost_Remove_Occluder.Pre[i].Invoke(conn);
-                            break;
+                        switch (invokesAndOr[PrePost_Remove_Occluder.Pre[i]])
+                        {
+                            case CNMAttrAndOr.options.AND:
+                                value &= PrePost_Remove_Occluder.Pre[i].Invoke(conn);
+                                break;
+                            case CNMAttrAndOr.options.OR:
+                                value |= PrePost_Remove_Occluder.Pre[i].Invoke(conn);
+                                break;
+                        }
                     }
+                    catch (Exception ex) { Debug.LogError(ex); }
                 }
                 value |= base.Remove(conn);
             }
@@ -734,15 +839,19 @@ namespace CommNetManager
 
             for (int i = 1; i < PrePost_Remove_Occluder.Post.Count; i++)
             {
-                switch (invokesAndOr[PrePost_Remove_Occluder.Post[i]])
+                try
                 {
-                    case CNMAttrAndOr.options.AND:
-                        value &= PrePost_Remove_Occluder.Post[i].Invoke(conn);
-                        break;
-                    case CNMAttrAndOr.options.OR:
-                        value |= PrePost_Remove_Occluder.Post[i].Invoke(conn);
-                        break;
+                    switch (invokesAndOr[PrePost_Remove_Occluder.Post[i]])
+                    {
+                        case CNMAttrAndOr.options.AND:
+                            value &= PrePost_Remove_Occluder.Post[i].Invoke(conn);
+                            break;
+                        case CNMAttrAndOr.options.OR:
+                            value |= PrePost_Remove_Occluder.Post[i].Invoke(conn);
+                            break;
+                    }
                 }
+                catch (Exception ex) { Debug.LogError(ex); }
             }
 
             return value;
@@ -754,18 +863,23 @@ namespace CommNetManager
 
             if (PrePost_TestOcclusion.Pre.Count > 0)
             {
-                value = PrePost_TestOcclusion.Pre[0].Invoke(aPos, a, bPos, b, distance);
+                try { value = PrePost_TestOcclusion.Pre[0].Invoke(aPos, a, bPos, b, distance); }
+                catch (Exception ex) { Debug.LogError(ex); value = true; }
                 for (int i = 1; i < PrePost_TestOcclusion.Pre.Count; i++)
                 {
-                    switch (invokesAndOr[PrePost_TestOcclusion.Pre[i]])
+                    try
                     {
-                        case CNMAttrAndOr.options.AND:
-                            value &= PrePost_TestOcclusion.Pre[i].Invoke(aPos, a, bPos, b, distance);
-                            break;
-                        case CNMAttrAndOr.options.OR:
-                            value |= PrePost_TestOcclusion.Pre[i].Invoke(aPos, a, bPos, b, distance);
-                            break;
+                        switch (invokesAndOr[PrePost_TestOcclusion.Pre[i]])
+                        {
+                            case CNMAttrAndOr.options.AND:
+                                value &= PrePost_TestOcclusion.Pre[i].Invoke(aPos, a, bPos, b, distance);
+                                break;
+                            case CNMAttrAndOr.options.OR:
+                                value |= PrePost_TestOcclusion.Pre[i].Invoke(aPos, a, bPos, b, distance);
+                                break;
+                        }
                     }
+                    catch (Exception ex) { Debug.LogError(ex); }
                 }
                 value |= base.TestOcclusion(aPos, a, bPos, b, distance);
             }
@@ -776,15 +890,19 @@ namespace CommNetManager
 
             for (int i = 1; i < PrePost_TestOcclusion.Post.Count; i++)
             {
-                switch (invokesAndOr[PrePost_TestOcclusion.Post[i]])
+                try
                 {
-                    case CNMAttrAndOr.options.AND:
-                        value &= PrePost_TestOcclusion.Post[i].Invoke(aPos, a, bPos, b, distance);
-                        break;
-                    case CNMAttrAndOr.options.OR:
-                        value |= PrePost_TestOcclusion.Post[i].Invoke(aPos, a, bPos, b, distance);
-                        break;
+                    switch (invokesAndOr[PrePost_TestOcclusion.Post[i]])
+                    {
+                        case CNMAttrAndOr.options.AND:
+                            value &= PrePost_TestOcclusion.Post[i].Invoke(aPos, a, bPos, b, distance);
+                            break;
+                        case CNMAttrAndOr.options.OR:
+                            value |= PrePost_TestOcclusion.Post[i].Invoke(aPos, a, bPos, b, distance);
+                            break;
+                    }
                 }
+                catch (Exception ex) { Debug.LogError(ex); }
             }
 
             return value;
@@ -796,18 +914,23 @@ namespace CommNetManager
 
             if (PrePost_TryConnect.Pre.Count > 0)
             {
-                value = PrePost_TryConnect.Pre[0].Invoke(a, b, distance, aCanRelay, bCanRelay, bothRelay);
+                try { value = PrePost_TryConnect.Pre[0].Invoke(a, b, distance, aCanRelay, bCanRelay, bothRelay); }
+                catch (Exception ex) { Debug.LogError(ex); value = true; }
                 for (int i = 1; i < PrePost_TryConnect.Pre.Count; i++)
                 {
-                    switch (invokesAndOr[PrePost_TryConnect.Pre[i]])
+                    try
                     {
-                        case CNMAttrAndOr.options.AND:
-                            value &= PrePost_TryConnect.Pre[i].Invoke(a, b, distance, aCanRelay, bCanRelay, bothRelay);
-                            break;
-                        case CNMAttrAndOr.options.OR:
-                            value |= PrePost_TryConnect.Pre[i].Invoke(a, b, distance, aCanRelay, bCanRelay, bothRelay);
-                            break;
+                        switch (invokesAndOr[PrePost_TryConnect.Pre[i]])
+                        {
+                            case CNMAttrAndOr.options.AND:
+                                value &= PrePost_TryConnect.Pre[i].Invoke(a, b, distance, aCanRelay, bCanRelay, bothRelay);
+                                break;
+                            case CNMAttrAndOr.options.OR:
+                                value |= PrePost_TryConnect.Pre[i].Invoke(a, b, distance, aCanRelay, bCanRelay, bothRelay);
+                                break;
+                        }
                     }
+                    catch (Exception ex) { Debug.LogError(ex); }
                 }
                 value |= base.TryConnect(a, b, distance, aCanRelay, bCanRelay, bothRelay);
             }
@@ -818,15 +941,19 @@ namespace CommNetManager
 
             for (int i = 1; i < PrePost_TryConnect.Post.Count; i++)
             {
-                switch (invokesAndOr[PrePost_TryConnect.Post[i]])
+                try
                 {
-                    case CNMAttrAndOr.options.AND:
-                        value &= PrePost_TryConnect.Post[i].Invoke(a, b, distance, aCanRelay, bCanRelay, bothRelay);
-                        break;
-                    case CNMAttrAndOr.options.OR:
-                        value |= PrePost_TryConnect.Post[i].Invoke(a, b, distance, aCanRelay, bCanRelay, bothRelay);
-                        break;
+                    switch (invokesAndOr[PrePost_TryConnect.Post[i]])
+                    {
+                        case CNMAttrAndOr.options.AND:
+                            value &= PrePost_TryConnect.Post[i].Invoke(a, b, distance, aCanRelay, bCanRelay, bothRelay);
+                            break;
+                        case CNMAttrAndOr.options.OR:
+                            value |= PrePost_TryConnect.Post[i].Invoke(a, b, distance, aCanRelay, bCanRelay, bothRelay);
+                            break;
+                    }
                 }
+                catch (Exception ex) { Debug.LogError(ex); }
             }
 
             return value;
@@ -834,35 +961,39 @@ namespace CommNetManager
 
         protected override void UpdateNetwork()
         {
-            CommNetManagerAPI.CommNetManagerEvents.onCommNetPreUpdate.Fire(CommNetManager.Instance, this);
+            CommNetManagerEvents.onCommNetPreUpdate.Fire(CommNetManager.Instance, this);
 
             for (int i = 0; i < PrePost_UpdateNetwork.Pre.Count; i++)
             {
-                PrePost_UpdateNetwork.Pre[i].Invoke();
+                try { PrePost_UpdateNetwork.Pre[i].Invoke(); }
+                catch (Exception ex) { Debug.LogError(ex); }
             }
 
             base.UpdateNetwork();
 
             for (int i = 0; i < PrePost_UpdateNetwork.Post.Count; i++)
             {
-                PrePost_UpdateNetwork.Post[i].Invoke();
+                try { PrePost_UpdateNetwork.Post[i].Invoke(); }
+                catch (Exception ex) { Debug.LogError(ex); }
             }
 
-            CommNetManagerAPI.CommNetManagerEvents.onCommNetPostUpdate.Fire(CommNetManager.Instance, this);
+            CommNetManagerEvents.onCommNetPostUpdate.Fire(CommNetManager.Instance, this);
         }
 
         protected override void UpdateShortestPath(CommNode a, CommNode b, CommLink link, double bestCost, CommNode startNode, CommNode endNode)
         {
             for (int i = 0; i < PrePost_UpdateShortestPath.Pre.Count; i++)
             {
-                PrePost_UpdateShortestPath.Pre[i].Invoke(a, b, link, bestCost, startNode, endNode);
+                try { PrePost_UpdateShortestPath.Pre[i].Invoke(a, b, link, bestCost, startNode, endNode); }
+                catch (Exception ex) { Debug.LogError(ex); }
             }
 
             base.UpdateShortestPath(a, b, link, bestCost, startNode, endNode);
 
             for (int i = 0; i < PrePost_UpdateShortestPath.Post.Count; i++)
             {
-                PrePost_UpdateShortestPath.Post[i].Invoke(a, b, link, bestCost, startNode, endNode);
+                try { PrePost_UpdateShortestPath.Post[i].Invoke(a, b, link, bestCost, startNode, endNode); }
+                catch (Exception ex) { Debug.LogError(ex); }
             }
         }
 
@@ -872,14 +1003,16 @@ namespace CommNetManager
 
             for (int i = 0; i < PrePost_UpdateShortestWhere.Pre.Count; i++)
             {
-                PrePost_UpdateShortestWhere.Pre[i].Invoke(a, b, link, bestCost, startNode, whereClause);
+                try { PrePost_UpdateShortestWhere.Pre[i].Invoke(a, b, link, bestCost, startNode, whereClause); }
+                catch (Exception ex) { Debug.LogError(ex); }
             }
 
             value = base.UpdateShortestWhere(a, b, link, bestCost, startNode, whereClause);
 
             for (int i = 0; i < PrePost_UpdateShortestWhere.Post.Count; i++)
             {
-                PrePost_UpdateShortestWhere.Post[i].Invoke(a, b, link, bestCost, startNode, whereClause);
+                try { PrePost_UpdateShortestWhere.Post[i].Invoke(a, b, link, bestCost, startNode, whereClause); }
+                catch (Exception ex) { Debug.LogError(ex); }
             }
 
             return value;
