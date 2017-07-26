@@ -14,7 +14,7 @@
             </summary>
             <seealso cref="T:System.Attribute" />
         </member>
-        <member name="F:CommNetManagerAPI.CNMAttrAndOr.op">
+        <member name="F:CommNetManagerAPI.CNMAttrAndOr.andOr">
             <exclude />
         </member>
         <member name="T:CommNetManagerAPI.CNMAttrAndOr.options">
@@ -30,7 +30,7 @@
             <summary>
             Initializes a new instance of the <see cref="T:CommNetManagerAPI.CNMAttrAndOr"/> class.
             </summary>
-            <param name="op">Enum specifying the option selected.</param>
+            <param name="andOr">Enum specifying the option selected.</param>
         </member>
         <member name="M:CommNetManagerAPI.CNMAttrAndOr.ToString">
             <exclude />
@@ -42,7 +42,7 @@
             </summary>
             <seealso cref="T:System.Attribute" />
         </member>
-        <member name="F:CommNetManagerAPI.CNMAttrSequence.op">
+        <member name="F:CommNetManagerAPI.CNMAttrSequence.when">
             <exclude />
         </member>
         <member name="T:CommNetManagerAPI.CNMAttrSequence.options">
@@ -61,7 +61,7 @@
             <summary>
             Initializes a new instance of the <see cref="T:CommNetManagerAPI.CNMAttrSequence"/> class.
             </summary>
-            <param name="op">Enum specifying the option selected.</param>
+            <param name="when">Enum specifying the option selected.</param>
         </member>
         <member name="M:CommNetManagerAPI.CNMAttrSequence.ToString">
             <exclude />

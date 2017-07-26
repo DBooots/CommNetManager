@@ -14,7 +14,7 @@ namespace CommNetManagerAPI
     public class CNMAttrAndOr : System.Attribute
     {
         /// <exclude />
-        public readonly options op;
+        public readonly options andOr;
         /// <exclude />
         public enum options
         {
@@ -26,16 +26,16 @@ namespace CommNetManagerAPI
         /// <summary>
         /// Initializes a new instance of the <see cref="CNMAttrAndOr"/> class.
         /// </summary>
-        /// <param name="op">Enum specifying the option selected.</param>
-        public CNMAttrAndOr(options op)
+        /// <param name="andOr">Enum specifying the option selected.</param>
+        public CNMAttrAndOr(options andOr)
         {
-            this.op = op;
+            this.andOr = andOr;
         }
 
         /// <exclude />
         public override string ToString()
         {
-            return String.Format("CNMAttrAndOr.{0}", op.ToString());
+            return String.Format("CNMAttrAndOr.{0}", andOr.ToString());
         }
     }
 
@@ -48,7 +48,7 @@ namespace CommNetManagerAPI
     public class CNMAttrSequence : System.Attribute
     {
         /// <exclude />
-        public readonly options op;
+        public readonly options when;
         /// <exclude />
         public enum options
         {
@@ -62,16 +62,16 @@ namespace CommNetManagerAPI
         /// <summary>
         /// Initializes a new instance of the <see cref="CNMAttrSequence"/> class.
         /// </summary>
-        /// <param name="op">Enum specifying the option selected.</param>
-        public CNMAttrSequence(options op)
+        /// <param name="when">Enum specifying the option selected.</param>
+        public CNMAttrSequence(options when)
         {
-            this.op = op;
+            this.when = when;
         }
 
         /// <exclude />
         public override string ToString()
         {
-            return String.Format("CNMAttrSequence.{0}", op.ToString());
+            return String.Format("CNMAttrSequence.{0}", when.ToString());
         }
     }
 
