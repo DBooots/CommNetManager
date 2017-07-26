@@ -10,8 +10,9 @@
             <para>WARNING: Methods that implement 'OR' MUST NOT call base.method() in their body.</para>
             <para>Since the stock method will be called anyway, methods should not call base.method() anyway in their body if they detect a CommNetManager installation.</para>
             <para>Instead, methods implementing 'AND' should return true and methods implementing 'OR' should return false.</para>
-            <para>NOTE: Methods implementing 'OR' should generally also be marked 'PRE' and methods implementing 'AND' should generally be marked 'POST'.</para>
+            <para>NOTE: Methods implementing 'OR' should generally also be marked 'EARLY' and methods implementing 'AND' should generally be marked 'LATE'.</para>
             </summary>
+            <seealso cref="T:System.Attribute" />
         </member>
         <member name="F:CommNetManagerAPI.CNMAttrAndOr.op">
             <exclude />
@@ -31,29 +32,71 @@
             </summary>
             <param name="op">Enum specifying the option selected.</param>
         </member>
-        <member name="T:CommNetManagerAPI.CNMAttrPrePost">
+        <member name="M:CommNetManagerAPI.CNMAttrAndOr.ToString">
+            <exclude />
+        </member>
+        <member name="T:CommNetManagerAPI.CNMAttrSequence">
             <summary>
             Method attribute used to specify if the method should be called before or after the stock method.
             <para>CAUTION: Methods should not call base.method() in their body if they detect a CommNetManager installation.</para>
             </summary>
+            <seealso cref="T:System.Attribute" />
         </member>
-        <member name="F:CommNetManagerAPI.CNMAttrPrePost.op">
+        <member name="F:CommNetManagerAPI.CNMAttrSequence.op">
             <exclude />
         </member>
-        <member name="T:CommNetManagerAPI.CNMAttrPrePost.options">
+        <member name="T:CommNetManagerAPI.CNMAttrSequence.options">
             <exclude />
         </member>
-        <member name="F:CommNetManagerAPI.CNMAttrPrePost.options.POST">
+        <member name="F:CommNetManagerAPI.CNMAttrSequence.options.EARLY">
             <exclude />
         </member>
-        <member name="F:CommNetManagerAPI.CNMAttrPrePost.options.PRE">
+        <member name="F:CommNetManagerAPI.CNMAttrSequence.options.LATE">
             <exclude />
         </member>
-        <member name="M:CommNetManagerAPI.CNMAttrPrePost.#ctor(CommNetManagerAPI.CNMAttrPrePost.options)">
+        <member name="F:CommNetManagerAPI.CNMAttrSequence.options.POST">
+            <exclude />
+        </member>
+        <member name="M:CommNetManagerAPI.CNMAttrSequence.#ctor(CommNetManagerAPI.CNMAttrSequence.options)">
             <summary>
-            Initializes a new instance of the <see cref="T:CommNetManagerAPI.CNMAttrPrePost"/> class.
+            Initializes a new instance of the <see cref="T:CommNetManagerAPI.CNMAttrSequence"/> class.
             </summary>
             <param name="op">Enum specifying the option selected.</param>
+        </member>
+        <member name="M:CommNetManagerAPI.CNMAttrSequence.ToString">
+            <exclude />
+        </member>
+        <member name="T:CommNetManagerAPI.CNMAttrBefore">
+            <summary>
+            Method attribute to specify that the method in question should precede the target type's method.
+            <para /> Not yet implemented. 
+            </summary>
+            <seealso cref="T:System.Attribute" />
+        </member>
+        <member name="F:CommNetManagerAPI.CNMAttrBefore.target">
+            <exclude />
+        </member>
+        <member name="M:CommNetManagerAPI.CNMAttrBefore.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:CommNetManagerAPI.CNMAttrBefore"/> class.
+            </summary>
+            <param name="target">The target class.</param>
+        </member>
+        <member name="T:CommNetManagerAPI.CNMAttrAfter">
+            <summary>
+            Method attribute to specify that the method in question should be preceded by the target type's method.
+            <para /> Not yet implemented. 
+            </summary>
+            <seealso cref="T:System.Attribute" />
+        </member>
+        <member name="F:CommNetManagerAPI.CNMAttrAfter.target">
+            <exclude />
+        </member>
+        <member name="M:CommNetManagerAPI.CNMAttrAfter.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:CommNetManagerAPI.CNMAttrAfter"/> class.
+            </summary>
+            <param name="target">The target class.</param>
         </member>
         <member name="T:CommNetManagerAPI.CommNetManagerChecker">
             <summary>
