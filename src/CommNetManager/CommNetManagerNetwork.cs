@@ -8,9 +8,11 @@ using UnityEngine;
 
 namespace CommNetManager
 {
-    public class CommNetManagerNetwork : CommNetwork
+    public class CommNetManagerNetwork : CommNetwork, PublicCommNet
     {
         public static CommNetwork Instance { get; protected set; } = null;
+        internal protected static Dictionary<CommNode, Vessel> commNodesVessels = new Dictionary<CommNode, Vessel>();
+
         private static bool methodsLoaded = false;
 
         private static Dictionary<MethodInfo, Type> methodTypes = new Dictionary<MethodInfo, Type>();
@@ -102,6 +104,8 @@ namespace CommNetManager
 
         public static List<Type> networkTypes { get; private set; }
 
+        #region SequenceList<Delegate> for each inherited method
+
         private SequenceList<Func<CommNode, CommNode, bool>> Sequence_SetNodeConnection = new SequenceList<Func<CommNode, CommNode, bool>>();
         private SequenceList<Func<CommNode, CommNode>> Sequence_Add_CommNode = new SequenceList<Func<CommNode, CommNode>>();
         private SequenceList<Func<Occluder, Occluder>> Sequence_Add_Occluder = new SequenceList<Func<Occluder, Occluder>>();
@@ -123,7 +127,9 @@ namespace CommNetManager
         private SequenceList<Action> Sequence_UpdateNetwork = new SequenceList<Action>();
         private SequenceList<Action<CommNode, CommNode, CommLink, double, CommNode, CommNode>> Sequence_UpdateShortestPath = new SequenceList<Action<CommNode, CommNode, CommLink, double, CommNode, CommNode>>();
         private SequenceList<Func<CommNode, CommNode, CommLink, double, CommNode, Func<CommNode, CommNode, bool>, CommNode>> Sequence_UpdateShortestWhere = new SequenceList<Func<CommNode, CommNode, CommLink, double, CommNode, Func<CommNode, CommNode, bool>, CommNode>>();
-        
+
+        #endregion
+
         internal static void Initiate()
         {
             if (networkTypes == null)
@@ -313,22 +319,22 @@ namespace CommNetManager
                         break;
                     case "Disconnect":
                         Sequence_Disconnect.Add(sequence, Delegate.CreateDelegate(typeof(Action<CommNode, CommNode, bool>), networkInstance, method) as Action<CommNode, CommNode, bool>);
-                        invokesAndOr.Add(Sequence_SetNodeConnection[sequence].Last(), andOrList[method]);
+                        invokesAndOr.Add(Sequence_Disconnect[sequence].Last(), andOrList[method]);
                         break;
                     case "FindClosestControlSource":
                         Sequence_FindClosestControlSource.Add(sequence, Delegate.CreateDelegate(typeof(Func<CommNode, CommPath, bool>), networkInstance, method) as Func<CommNode, CommPath, bool>);
-                        invokesAndOr.Add(Sequence_SetNodeConnection[sequence].Last(), andOrList[method]);
+                        invokesAndOr.Add(Sequence_FindClosestControlSource[sequence].Last(), andOrList[method]);
                         break;
                     case "FindClosestWhere":
                         Sequence_FindClosestWhere.Add(sequence, Delegate.CreateDelegate(typeof(Func<CommNode, CommPath, Func<CommNode, CommNode, bool>, CommNode>), networkInstance, method) as Func<CommNode, CommPath, Func<CommNode, CommNode, bool>, CommNode>);
                         break;
                     case "FindHome":
                         Sequence_FindHome.Add(sequence, Delegate.CreateDelegate(typeof(Func<CommNode, CommPath, bool>), networkInstance, method) as Func<CommNode, CommPath, bool>);
-                        invokesAndOr.Add(Sequence_SetNodeConnection[sequence].Last(), andOrList[method]);
+                        invokesAndOr.Add(Sequence_FindHome[sequence].Last(), andOrList[method]);
                         break;
                     case "FindPath":
                         Sequence_FindPath.Add(sequence, Delegate.CreateDelegate(typeof(Func<CommNode, CommPath, CommNode, bool>), networkInstance, method) as Func<CommNode, CommPath, CommNode, bool>);
-                        invokesAndOr.Add(Sequence_SetNodeConnection[sequence].Last(), andOrList[method]);
+                        invokesAndOr.Add(Sequence_FindPath[sequence].Last(), andOrList[method]);
                         break;
                     case "GetLinkPoints":
                         Sequence_GetLinkPoints.Add(sequence, Delegate.CreateDelegate(typeof(Action<List<Vector3>>), networkInstance, method) as Action<List<Vector3>>);
@@ -344,19 +350,19 @@ namespace CommNetManager
                         break;
                     case "Remove_CommNode":
                         Sequence_Remove_CommNode.Add(sequence, Delegate.CreateDelegate(typeof(Func<CommNode, bool>), networkInstance, method) as Func<CommNode, bool>);
-                        invokesAndOr.Add(Sequence_SetNodeConnection[sequence].Last(), andOrList[method]);
+                        invokesAndOr.Add(Sequence_Remove_CommNode[sequence].Last(), andOrList[method]);
                         break;
                     case "Remove_Occluder":
                         Sequence_Remove_Occluder.Add(sequence, Delegate.CreateDelegate(typeof(Func<Occluder, bool>), networkInstance, method) as Func<Occluder, bool>);
-                        invokesAndOr.Add(Sequence_SetNodeConnection[sequence].Last(), andOrList[method]);
+                        invokesAndOr.Add(Sequence_Remove_Occluder[sequence].Last(), andOrList[method]);
                         break;
                     case "TestOcclusion":
                         Sequence_TestOcclusion.Add(sequence, Delegate.CreateDelegate(typeof(Func<Vector3d, Occluder, Vector3d, Occluder, double, bool>), networkInstance, method) as Func<Vector3d, Occluder, Vector3d, Occluder, double, bool>);
-                        invokesAndOr.Add(Sequence_SetNodeConnection[sequence].Last(), andOrList[method]);
+                        invokesAndOr.Add(Sequence_TestOcclusion[sequence].Last(), andOrList[method]);
                         break;
                     case "TryConnect":
                         Sequence_TryConnect.Add(sequence, Delegate.CreateDelegate(typeof(Func<CommNode, CommNode, double, bool, bool, bool, bool>), networkInstance, method) as Func<CommNode, CommNode, double, bool, bool, bool, bool>);
-                        invokesAndOr.Add(Sequence_SetNodeConnection[sequence].Last(), andOrList[method]);
+                        invokesAndOr.Add(Sequence_TryConnect[sequence].Last(), andOrList[method]);
                         break;
                     case "UpdateNetwork":
                         Sequence_UpdateNetwork.Add(sequence, Delegate.CreateDelegate(typeof(Action), networkInstance, method) as Action);
@@ -430,6 +436,10 @@ namespace CommNetManager
 
             if (value == true)
                 value &= base.SetNodeConnection(a, b);
+            else
+            {
+                Disconnect(a, b, true);
+            }
             
             for (int i = 0; i < Sequence_SetNodeConnection.Post.Count; i++)
             {
@@ -457,6 +467,8 @@ namespace CommNetManager
             }
 
             value = base.Add(conn);
+            if (value != null && !commNodesVessels.ContainsKey(conn))
+                commNodesVessels.Add(conn, FlightGlobals.Vessels.Find(vessel => vessel != null && vessel.connection != null && CommNetExtensions.CNEquals(vessel.connection.Comm, conn)));
 
             for (int i = 0; i < Sequence_Add_CommNode.Post.Count; i++)
             {
@@ -783,7 +795,12 @@ namespace CommNetManager
             }
 
             //if (value == true)
-            value &= base.Remove(conn);
+
+            bool baseValue = base.Remove(conn);
+            if (baseValue && commNodesVessels.ContainsKey(conn))
+                commNodesVessels.Remove(conn);
+
+            value &= baseValue;
 
             for (int i = 0; i < Sequence_Remove_CommNode.Post.Count; i++)
             {
@@ -952,10 +969,67 @@ namespace CommNetManager
             return value;
         }
 
+        #endregion
+
+        #region PublicCommNet
+
+        bool PublicCommNet.SetNodeConnection(CommNode a, CommNode b) { return this.SetNodeConnection(a, b); }
+
+        CommNode PublicCommNet.Add(CommNode conn) { return this.Add(conn); }
+
+        Occluder PublicCommNet.Add(Occluder conn) { return this.Add(conn); }
+
+        CommLink PublicCommNet.Connect(CommNode a, CommNode b, double distance) { return this.Connect(a, b, distance); }
+
+        void PublicCommNet.CreateShortestPathTree(CommNode start, CommNode end) { this.CreateShortestPathTree(start, end); }
+
+        void PublicCommNet.Disconnect(CommNode a, CommNode b, bool removeFromA) { this.Disconnect(a, b, removeFromA); }
+
+        bool PublicCommNet.FindClosestControlSource(CommNode from, CommPath path) { return this.FindClosestControlSource(from, path); }
+
+        CommNode PublicCommNet.FindClosestWhere(CommNode start, CommPath path, Func<CommNode, CommNode, bool> where)
+            { return this.FindClosestWhere(start, path, where); }
+
+        bool PublicCommNet.FindHome(CommNode from, CommPath path) { return this.FindHome(from, path); }
+
+        bool PublicCommNet.FindPath(CommNode start, CommPath path, CommNode end) { return this.FindPath(start, path, end); }
+
+        void PublicCommNet.GetLinkPoints(List<Vector3> discreteLines) { this.GetLinkPoints(discreteLines); }
+
+        void PublicCommNet.PostUpdateNodes() { this.PostUpdateNodes(); }
+
+        void PublicCommNet.PreUpdateNodes() { this.PreUpdateNodes(); }
+
+        void PublicCommNet.Rebuild() { this.Rebuild(); }
+
+        bool PublicCommNet.Remove(CommNode conn) { return this.Remove(conn); }
+
+        bool PublicCommNet.Remove(Occluder conn) { return this.Remove(conn); }
+
+        bool PublicCommNet.TestOcclusion(Vector3d aPos, Occluder a, Vector3d bPos, Occluder b, double distance)
+            { return this.TestOcclusion(aPos, a, bPos, b, distance); }
+
+        bool PublicCommNet.TryConnect(CommNode a, CommNode b, double distance, bool aCanRelay, bool bCanRelay, bool bothRelay)
+            { return this.TryConnect(a, b, distance, aCanRelay, bCanRelay, bothRelay); }
+
+        void PublicCommNet.UpdateNetwork() { this.UpdateNetwork(); }
+
+        void PublicCommNet.UpdateShortestPath(CommNode a, CommNode b, CommLink link, double bestCost, CommNode startNode, CommNode endNode)
+            { this.UpdateShortestPath(a, b, link, bestCost, startNode, endNode); }
+
+        CommNode PublicCommNet.UpdateShortestWhere(CommNode a, CommNode b, CommLink link, double bestCost, CommNode startNode, Func<CommNode, CommNode, bool> whereClause)
+            { return this.UpdateShortestWhere(a, b, link, bestCost, startNode, whereClause); }
+
+        CommNetwork PublicCommNet.GetInstance() { return Instance; }
+
+        #endregion
+
+        #region Func<> and Action<> extension
         // Things that should be built into the language...
         public delegate TResult Func<T1, T2, T3, T4, T5, TResult>(T1 T1, T2 T2, T3 T3, T4 T4, T5 T5);
         public delegate TResult Func<T1, T2, T3, T4, T5, T6, TResult>(T1 T1, T2 T2, T3 T3, T4 T4, T5 T5, T6 T6);
         public delegate void Action<T1, T2, T3, T4, T5>(T1 T1, T2 T2, T3 T3, T4 T4, T5 T5);
         public delegate void Action<T1, T2, T3, T4, T5, T6>(T1 T1, T2 T2, T3 T3, T4 T4, T5 T5, T6 T6);
+        #endregion
     }
 }
