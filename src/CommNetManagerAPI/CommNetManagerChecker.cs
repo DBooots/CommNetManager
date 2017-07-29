@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using CommNet;
 
@@ -32,6 +33,15 @@ namespace CommNetManagerAPI
                         assembly.FullName.StartsWith("CommNetManager") && !assembly.FullName.StartsWith("CommNetManagerAPI"));
                     CommNetManager = CNMAssembly != null ? CNMAssembly.GetType("CommNetManager.CommNetManager", true) : null;
                     _CommNetManagerInstalled = !(CommNetManager == null);
+                    if (_CommNetManagerInstalled)
+                    {
+                        CommNetExtensions.commNodesVessels =
+                            (Dictionary<CommNode, Vessel>)
+                            CNMAssembly.GetType("CommNetManager.CommNetManagerNetwork", true)
+                            .GetField("commNodesVessels", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)
+                            .GetValue(null);
+                        CommNetExtensions.getVessel = CommNetExtensions.GetVesselCNM;
+                    }
                     CommNetManagerChecked = true;
                     UnityEngine.Debug.Log("CommNetManager " + (_CommNetManagerInstalled ? "is" : "is not") + " installed.");
                 }
