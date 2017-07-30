@@ -9,16 +9,19 @@
             Extension methods for use with CommNet.
             </summary>
         </member>
+        <member name="M:CommNetManagerAPI.CommNetExtensions.TryGetVessel(CommNet.CommNode,Vessel@)">
+            <summary>
+            Similar to <see cref="M:CommNetManagerAPI.CommNetExtensions.GetVessel(CommNet.CommNode)"/> but returns a bool indicating success.
+            </summary>
+            <param name="commNode">The node to find the parent vessel of.</param>
+            <param name="vessel">The returned vessel.</param>
+            <returns>True if successful.</returns>
+        </member>
         <member name="M:CommNetManagerAPI.CommNetExtensions.GetVessel(CommNet.CommNode)">
             <summary>
             Gets the <see cref="T:Vessel"/>  associated with a <see cref="T:CommNet.CommNode"/>.
             </summary>
             <param name="commNode">The node to find the parent vessel of.</param>
-        </member>
-        <member name="M:CommNetManagerAPI.CommNetExtensions.CNEquals(CommNet.CommNode,CommNet.CommNode)">
-            <summary>
-            Custom equality comparer for CommNodes.
-            </summary>
         </member>
         <member name="T:CommNetManagerAPI.CNMAttrAndOr">
             <summary>

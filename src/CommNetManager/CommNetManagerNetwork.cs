@@ -468,7 +468,7 @@ namespace CommNetManager
 
             value = base.Add(conn);
             if (value != null && !commNodesVessels.ContainsKey(conn))
-                commNodesVessels.Add(conn, FlightGlobals.Vessels.Find(vessel => vessel != null && vessel.connection != null && CommNetExtensions.CNEquals(vessel.connection.Comm, conn)));
+                commNodesVessels.Add(conn, FlightGlobals.Vessels.Find(vessel => vessel != null && vessel.connection != null && vessel.connection.Comm == conn));
 
             for (int i = 0; i < Sequence_Add_CommNode.Post.Count; i++)
             {

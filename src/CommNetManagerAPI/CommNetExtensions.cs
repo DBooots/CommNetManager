@@ -14,7 +14,7 @@ namespace CommNetManagerAPI
 
         internal static Vessel GetVesselStock(this CommNode commNode)
         {
-            return FlightGlobals.Vessels.FirstOrDefault(vessel => vessel != null && vessel.connection != null && CNEquals(vessel.connection.Comm, commNode));
+            return FlightGlobals.Vessels.FirstOrDefault(vessel => vessel != null && vessel.connection != null && vessel.connection.Comm == commNode);
         }
         internal static Vessel GetVesselCNM(this CommNode commNode)
         {
@@ -22,6 +22,18 @@ namespace CommNetManagerAPI
             if (!commNodesVessels.TryGetValue(commNode, out vessel))
                 return null;
             return vessel;
+        }
+
+        /// <summary>
+        /// Similar to <see cref="GetVessel(CommNode)"/> but returns a bool indicating success.
+        /// </summary>
+        /// <param name="commNode">The node to find the parent vessel of.</param>
+        /// <param name="vessel">The returned vessel.</param>
+        /// <returns>True if successful.</returns>
+        public static bool TryGetVessel(this CommNode commNode, out Vessel vessel)
+        {
+            vessel = commNode.GetVessel();
+            return vessel != null;
         }
         /// <summary>
         /// Gets the <see cref="Vessel"/>  associated with a <see cref="CommNode"/>.
@@ -33,13 +45,13 @@ namespace CommNetManagerAPI
         }
         internal static Func<CommNode, Vessel> getVessel = GetVesselStock;
 
-        /// <summary>
+        /*/// <summary>
         /// Custom equality comparer for CommNodes.
         /// </summary>
         public static bool CNEquals(this CommNode a, CommNode b)
         {
             if (a == null || b == null) return false;
             return (a.precisePosition == b.precisePosition);
-        }
+        }*/
     }
 }
