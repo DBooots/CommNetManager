@@ -58,6 +58,7 @@
     <Compile Include="CommNetManagerChecker.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PublicCommNet.cs" />
+    <Compile Include="SequenceList.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

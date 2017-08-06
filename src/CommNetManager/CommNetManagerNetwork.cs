@@ -19,111 +19,30 @@ namespace CommNetManager
         private static Dictionary<string, SequenceList<MethodInfo>> methodsSequence = new Dictionary<string, SequenceList<MethodInfo>>();
         
         private static Dictionary<MethodInfo, CNMAttrAndOr.options> andOrList = new Dictionary<MethodInfo, CNMAttrAndOr.options>();
-        private Dictionary<Delegate, CNMAttrAndOr.options> invokesAndOr = new Dictionary<Delegate, CNMAttrAndOr.options>();
         private Dictionary<Type, CommNetwork> commNetworks = new Dictionary<Type, CommNetwork>();
-
-        private class SequenceList<T>
-        {
-            public List<T> Early;
-            public List<T> Late;
-            public List<T> Post;
-            public SequenceList(List<T> Early = null, List<T> Late = null, List<T> Post = null)
-            {
-                if (Early != null)
-                    this.Early = Early;
-                else
-                    this.Early = new List<T>();
-                if (Late != null)
-                    this.Late = Late;
-                else
-                    this.Late = new List<T>();
-                if (Post != null)
-                    this.Post = Post;
-                else
-                    this.Post = new List<T>();
-            }
-            public List<T> this[int i]
-            {
-                get
-                {
-                    switch (i)
-                    {
-                        case 0: return this.Early;
-                        case 1: return this.Late;
-                        case 2: return this.Post;
-                        default:
-                            Debug.LogError("CommNetManager: The provided int was out of range.");
-                            return null;
-                    }
-                }
-            }
-            public List<T> this[CNMAttrSequence.options sequence]
-            {
-                get
-                {
-                    switch (sequence)
-                    {
-                        case CNMAttrSequence.options.EARLY: return this.Early;
-                        case CNMAttrSequence.options.LATE: return this.Late;
-                        case CNMAttrSequence.options.POST: return this.Post;
-                        default: return null;
-                    }
-                }
-            }
-            public void Add(CNMAttrSequence.options sequence, T obj)
-            {
-                switch (sequence)
-                {
-                    case CNMAttrSequence.options.EARLY: this.Early.Add(obj);
-                        break;
-                    case CNMAttrSequence.options.LATE: this.Late.Add(obj);
-                        break;
-                    case CNMAttrSequence.options.POST: this.Post.Add(obj);
-                        break;
-                }
-            }
-            public void Clear()
-            {
-                this.Early.Clear();
-                this.Late.Clear();
-                this.Post.Clear();
-            }
-            public void Clear(CNMAttrSequence.options sequence)
-            {
-                switch (sequence)
-                {
-                    case CNMAttrSequence.options.EARLY: this.Early.Clear();
-                        break;
-                    case CNMAttrSequence.options.LATE: this.Late.Clear();
-                        break;
-                    case CNMAttrSequence.options.POST: this.Post.Clear();
-                        break;
-                }
-            }
-        }
 
         public static List<Type> networkTypes { get; private set; }
 
         #region SequenceList<Delegate> for each inherited method
 
-        private SequenceList<Func<CommNode, CommNode, bool>> Sequence_SetNodeConnection = new SequenceList<Func<CommNode, CommNode, bool>>();
+        private SequenceList<Func<CommNode, CommNode, bool>, CNMAttrAndOr.options> Sequence_SetNodeConnection = new SequenceList<Func<CommNode, CommNode, bool>, CNMAttrAndOr.options>();
         private SequenceList<Func<CommNode, CommNode>> Sequence_Add_CommNode = new SequenceList<Func<CommNode, CommNode>>();
         private SequenceList<Func<Occluder, Occluder>> Sequence_Add_Occluder = new SequenceList<Func<Occluder, Occluder>>();
         private SequenceList<Func<CommNode, CommNode, double, CommLink>> Sequence_Connect = new SequenceList<Func<CommNode, CommNode, double, CommLink>>();
         private SequenceList<Action<CommNode, CommNode>> Sequence_CreateShortestPathTree = new SequenceList<Action<CommNode, CommNode>>();
-        private SequenceList<Action<CommNode, CommNode, bool>> Sequence_Disconnect = new SequenceList<Action<CommNode, CommNode, bool>>();
-        private SequenceList<Func<CommNode, CommPath, bool>> Sequence_FindClosestControlSource = new SequenceList<Func<CommNode, CommPath, bool>>();
+        private SequenceList<Action<CommNode, CommNode, bool>, CNMAttrAndOr.options> Sequence_Disconnect = new SequenceList<Action<CommNode, CommNode, bool>, CNMAttrAndOr.options>();
+        private SequenceList<Func<CommNode, CommPath, bool>, CNMAttrAndOr.options> Sequence_FindClosestControlSource = new SequenceList<Func<CommNode, CommPath, bool>, CNMAttrAndOr.options>();
         private SequenceList<Func<CommNode, CommPath, Func<CommNode, CommNode, bool>, CommNode>> Sequence_FindClosestWhere = new SequenceList<Func<CommNode, CommPath, Func<CommNode, CommNode, bool>, CommNode>>();
-        private SequenceList<Func<CommNode, CommPath, bool>> Sequence_FindHome = new SequenceList<Func<CommNode, CommPath, bool>>();
-        private SequenceList<Func<CommNode, CommPath, CommNode, bool>> Sequence_FindPath = new SequenceList<Func<CommNode, CommPath, CommNode, bool>>();
+        private SequenceList<Func<CommNode, CommPath, bool>, CNMAttrAndOr.options> Sequence_FindHome = new SequenceList<Func<CommNode, CommPath, bool>, CNMAttrAndOr.options>();
+        private SequenceList<Func<CommNode, CommPath, CommNode, bool>, CNMAttrAndOr.options> Sequence_FindPath = new SequenceList<Func<CommNode, CommPath, CommNode, bool>, CNMAttrAndOr.options>();
         private SequenceList<Action<List<Vector3>>> Sequence_GetLinkPoints = new SequenceList<Action<List<Vector3>>>();
         private SequenceList<Action> Sequence_PostUpdateNodes = new SequenceList<Action>();
         private SequenceList<Action> Sequence_PreUpdateNodes = new SequenceList<Action>();
         private SequenceList<Action> Sequence_Rebuild = new SequenceList<Action>();
-        private SequenceList<Func<CommNode, bool>> Sequence_Remove_CommNode = new SequenceList<Func<CommNode, bool>>();
-        private SequenceList<Func<Occluder, bool>> Sequence_Remove_Occluder = new SequenceList<Func<Occluder, bool>>();
-        private SequenceList<Func<Vector3d, Occluder, Vector3d, Occluder, double, bool>> Sequence_TestOcclusion = new SequenceList<Func<Vector3d, Occluder, Vector3d, Occluder, double, bool>>();
-        private SequenceList<Func<CommNode, CommNode, double, bool, bool, bool, bool>> Sequence_TryConnect = new SequenceList<Func<CommNode, CommNode, double, bool, bool, bool, bool>>();
+        private SequenceList<Func<CommNode, bool>, CNMAttrAndOr.options> Sequence_Remove_CommNode = new SequenceList<Func<CommNode, bool>, CNMAttrAndOr.options>();
+        private SequenceList<Func<Occluder, bool>, CNMAttrAndOr.options> Sequence_Remove_Occluder = new SequenceList<Func<Occluder, bool>, CNMAttrAndOr.options>();
+        private SequenceList<Func<Vector3d, Occluder, Vector3d, Occluder, double, bool>, CNMAttrAndOr.options> Sequence_TestOcclusion = new SequenceList<Func<Vector3d, Occluder, Vector3d, Occluder, double, bool>, CNMAttrAndOr.options>();
+        private SequenceList<Func<CommNode, CommNode, double, bool, bool, bool, bool>, CNMAttrAndOr.options> Sequence_TryConnect = new SequenceList<Func<CommNode, CommNode, double, bool, bool, bool, bool>, CNMAttrAndOr.options>();
         private SequenceList<Action> Sequence_UpdateNetwork = new SequenceList<Action>();
         private SequenceList<Action<CommNode, CommNode, CommLink, double, CommNode, CommNode>> Sequence_UpdateShortestPath = new SequenceList<Action<CommNode, CommNode, CommLink, double, CommNode, CommNode>>();
         private SequenceList<Func<CommNode, CommNode, CommLink, double, CommNode, Func<CommNode, CommNode, bool>, CommNode>> Sequence_UpdateShortestWhere = new SequenceList<Func<CommNode, CommNode, CommLink, double, CommNode, Func<CommNode, CommNode, bool>, CommNode>>();
@@ -140,10 +59,7 @@ namespace CommNetManager
             methodsSequence.Clear();
             andOrList.Clear();
 
-            foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
-            {
-                networkTypes.AddRange(assembly.GetTypes().Where(type => typeof(CommNetwork).IsAssignableFrom(type) && !type.IsAbstract).ToList());
-            }
+            networkTypes = AssemblyLoader.loadedTypes.FindAll(type => typeof(CommNetwork).IsAssignableFrom(type));// && type != typeof(CommNetwork) && type != typeof(CommNetManagerNetwork));
 
             foreach (Type type in networkTypes)
             {
@@ -184,9 +100,9 @@ namespace CommNetManager
                     {
                         // Maybe not necessary
                         if (andOrList.ContainsKey(method) && andOrList[method] == CNMAttrAndOr.options.OR)
-                            methodsSequence[method.Name].Early.Add(method);
+                            methodsSequence[method.Name].Add(CNMAttrSequence.options.EARLY, method);
                         else
-                            methodsSequence[method.Name].Late.Add(method);
+                            methodsSequence[method.Name].Add(CNMAttrSequence.options.LATE, method);
                     }
                 }
             }
@@ -302,8 +218,7 @@ namespace CommNetManager
                 switch (methodName)
                 {
                     case "SetNodeConnection":
-                        Sequence_SetNodeConnection.Add(sequence, Delegate.CreateDelegate(typeof(Func<CommNode, CommNode, bool>), networkInstance, method) as Func<CommNode, CommNode, bool>);
-                        invokesAndOr.Add(Sequence_SetNodeConnection[sequence].Last(), andOrList[method]);
+                        Sequence_SetNodeConnection.Add(sequence, Delegate.CreateDelegate(typeof(Func<CommNode, CommNode, bool>), networkInstance, method) as Func<CommNode, CommNode, bool>, andOrList[method]);
                         break;
                     case "Add_CommNode":
                         Sequence_Add_CommNode.Add(sequence, Delegate.CreateDelegate(typeof(Func<CommNode, CommNode>), networkInstance, method) as Func<CommNode, CommNode>);
@@ -318,23 +233,19 @@ namespace CommNetManager
                         Sequence_CreateShortestPathTree.Add(sequence, Delegate.CreateDelegate(typeof(Action<CommNode, CommNode>), networkInstance, method) as Action<CommNode, CommNode>);
                         break;
                     case "Disconnect":
-                        Sequence_Disconnect.Add(sequence, Delegate.CreateDelegate(typeof(Action<CommNode, CommNode, bool>), networkInstance, method) as Action<CommNode, CommNode, bool>);
-                        invokesAndOr.Add(Sequence_Disconnect[sequence].Last(), andOrList[method]);
+                        Sequence_Disconnect.Add(sequence, Delegate.CreateDelegate(typeof(Action<CommNode, CommNode, bool>), networkInstance, method) as Action<CommNode, CommNode, bool>, andOrList[method]);
                         break;
                     case "FindClosestControlSource":
-                        Sequence_FindClosestControlSource.Add(sequence, Delegate.CreateDelegate(typeof(Func<CommNode, CommPath, bool>), networkInstance, method) as Func<CommNode, CommPath, bool>);
-                        invokesAndOr.Add(Sequence_FindClosestControlSource[sequence].Last(), andOrList[method]);
+                        Sequence_FindClosestControlSource.Add(sequence, Delegate.CreateDelegate(typeof(Func<CommNode, CommPath, bool>), networkInstance, method) as Func<CommNode, CommPath, bool>, andOrList[method]);
                         break;
                     case "FindClosestWhere":
                         Sequence_FindClosestWhere.Add(sequence, Delegate.CreateDelegate(typeof(Func<CommNode, CommPath, Func<CommNode, CommNode, bool>, CommNode>), networkInstance, method) as Func<CommNode, CommPath, Func<CommNode, CommNode, bool>, CommNode>);
                         break;
                     case "FindHome":
-                        Sequence_FindHome.Add(sequence, Delegate.CreateDelegate(typeof(Func<CommNode, CommPath, bool>), networkInstance, method) as Func<CommNode, CommPath, bool>);
-                        invokesAndOr.Add(Sequence_FindHome[sequence].Last(), andOrList[method]);
+                        Sequence_FindHome.Add(sequence, Delegate.CreateDelegate(typeof(Func<CommNode, CommPath, bool>), networkInstance, method) as Func<CommNode, CommPath, bool>, andOrList[method]);
                         break;
                     case "FindPath":
-                        Sequence_FindPath.Add(sequence, Delegate.CreateDelegate(typeof(Func<CommNode, CommPath, CommNode, bool>), networkInstance, method) as Func<CommNode, CommPath, CommNode, bool>);
-                        invokesAndOr.Add(Sequence_FindPath[sequence].Last(), andOrList[method]);
+                        Sequence_FindPath.Add(sequence, Delegate.CreateDelegate(typeof(Func<CommNode, CommPath, CommNode, bool>), networkInstance, method) as Func<CommNode, CommPath, CommNode, bool>, andOrList[method]);
                         break;
                     case "GetLinkPoints":
                         Sequence_GetLinkPoints.Add(sequence, Delegate.CreateDelegate(typeof(Action<List<Vector3>>), networkInstance, method) as Action<List<Vector3>>);
@@ -349,20 +260,16 @@ namespace CommNetManager
                         Sequence_Rebuild.Add(sequence, Delegate.CreateDelegate(typeof(Action), networkInstance, method) as Action);
                         break;
                     case "Remove_CommNode":
-                        Sequence_Remove_CommNode.Add(sequence, Delegate.CreateDelegate(typeof(Func<CommNode, bool>), networkInstance, method) as Func<CommNode, bool>);
-                        invokesAndOr.Add(Sequence_Remove_CommNode[sequence].Last(), andOrList[method]);
+                        Sequence_Remove_CommNode.Add(sequence, Delegate.CreateDelegate(typeof(Func<CommNode, bool>), networkInstance, method) as Func<CommNode, bool>, andOrList[method]);
                         break;
                     case "Remove_Occluder":
-                        Sequence_Remove_Occluder.Add(sequence, Delegate.CreateDelegate(typeof(Func<Occluder, bool>), networkInstance, method) as Func<Occluder, bool>);
-                        invokesAndOr.Add(Sequence_Remove_Occluder[sequence].Last(), andOrList[method]);
+                        Sequence_Remove_Occluder.Add(sequence, Delegate.CreateDelegate(typeof(Func<Occluder, bool>), networkInstance, method) as Func<Occluder, bool>, andOrList[method]);
                         break;
                     case "TestOcclusion":
-                        Sequence_TestOcclusion.Add(sequence, Delegate.CreateDelegate(typeof(Func<Vector3d, Occluder, Vector3d, Occluder, double, bool>), networkInstance, method) as Func<Vector3d, Occluder, Vector3d, Occluder, double, bool>);
-                        invokesAndOr.Add(Sequence_TestOcclusion[sequence].Last(), andOrList[method]);
+                        Sequence_TestOcclusion.Add(sequence, Delegate.CreateDelegate(typeof(Func<Vector3d, Occluder, Vector3d, Occluder, double, bool>), networkInstance, method) as Func<Vector3d, Occluder, Vector3d, Occluder, double, bool>, andOrList[method]);
                         break;
                     case "TryConnect":
-                        Sequence_TryConnect.Add(sequence, Delegate.CreateDelegate(typeof(Func<CommNode, CommNode, double, bool, bool, bool, bool>), networkInstance, method) as Func<CommNode, CommNode, double, bool, bool, bool, bool>);
-                        invokesAndOr.Add(Sequence_TryConnect[sequence].Last(), andOrList[method]);
+                        Sequence_TryConnect.Add(sequence, Delegate.CreateDelegate(typeof(Func<CommNode, CommNode, double, bool, bool, bool, bool>), networkInstance, method) as Func<CommNode, CommNode, double, bool, bool, bool, bool>, andOrList[method]);
                         break;
                     case "UpdateNetwork":
                         Sequence_UpdateNetwork.Add(sequence, Delegate.CreateDelegate(typeof(Action), networkInstance, method) as Action);
@@ -419,18 +326,37 @@ namespace CommNetManager
             }
         }
 
+        internal void logDump(CommLink link)
+        {
+            Debug.Log("CommNetManager: ++ CommLink dump ++");
+            Debug.Log("id: " + link.pathingID);
+            Debug.Log("a.name: " + link.a.name);
+            Debug.Log("b.name: " + link.b.name);
+            Debug.Log("cost: " + link.cost);
+            Debug.Log("hopType: " + link.hopType);
+            Debug.Log("signal: " + link.signal);
+            Debug.Log("signalStrength: " + link.signalStrength);
+            Debug.Log("aCanRelay: " + link.aCanRelay);
+            Debug.Log("bCanRelay: " + link.bCanRelay);
+            Debug.Log("bothRelay: " + link.bothRelay);
+            Debug.Log("Sum: " + link.ToString());
+            Debug.Log("++++++++++++++++++ End dump +++++++");
+        }
+
+        #region Inherited methods
+
         protected override bool SetNodeConnection(CommNode a, CommNode b)
         {
             bool value = true;
             for (int i = 0; i < Sequence_SetNodeConnection.Early.Count; i++)
             {
-                try { value = AndOr(value, Sequence_SetNodeConnection.Early[i].Invoke(a, b), invokesAndOr[Sequence_SetNodeConnection.Early[i]]); }
+                try { value = AndOr(value, Sequence_SetNodeConnection.Early[i].Invoke(a, b), Sequence_SetNodeConnection.MetaDict[Sequence_SetNodeConnection.Early[i]]); }
                 catch (Exception ex) { Debug.LogError(ex); }
             }
 
             for (int i = 0; i < Sequence_SetNodeConnection.Late.Count; i++)
             {
-                try { value = AndOr(value, Sequence_SetNodeConnection.Late[i].Invoke(a, b), invokesAndOr[Sequence_SetNodeConnection.Late[i]]); }
+                try { value = AndOr(value, Sequence_SetNodeConnection.Late[i].Invoke(a, b), Sequence_SetNodeConnection.MetaDict[Sequence_SetNodeConnection.Late[i]]); }
                 catch (Exception ex) { Debug.LogError(ex); }
             }
 
@@ -443,7 +369,7 @@ namespace CommNetManager
             
             for (int i = 0; i < Sequence_SetNodeConnection.Post.Count; i++)
             {
-                try { value = AndOr(value, Sequence_SetNodeConnection.Post[i].Invoke(a, b), invokesAndOr[Sequence_SetNodeConnection.Post[i]]); }
+                try { value = AndOr(value, Sequence_SetNodeConnection.Post[i].Invoke(a, b), Sequence_SetNodeConnection.MetaDict[Sequence_SetNodeConnection.Post[i]]); }
                 catch (Exception ex) { Debug.LogError(ex); }
             }
 
@@ -584,13 +510,13 @@ namespace CommNetManager
             bool value = true;
             for (int i = 0; i < Sequence_FindClosestControlSource.Early.Count; i++)
             {
-                try { value = AndOr(value, Sequence_FindClosestControlSource.Early[i].Invoke(from, path), invokesAndOr[Sequence_FindClosestControlSource.Early[i]]); }
+                try { value = AndOr(value, Sequence_FindClosestControlSource.Early[i].Invoke(from, path), Sequence_FindClosestControlSource.MetaDict[Sequence_FindClosestControlSource.Early[i]]); }
                 catch (Exception ex) { Debug.LogError(ex); }
             }
 
             for (int i = 0; i < Sequence_FindClosestControlSource.Late.Count; i++)
             {
-                try { value = AndOr(value, Sequence_FindClosestControlSource.Late[i].Invoke(from, path), invokesAndOr[Sequence_FindClosestControlSource.Late[i]]); }
+                try { value = AndOr(value, Sequence_FindClosestControlSource.Late[i].Invoke(from, path), Sequence_FindClosestControlSource.MetaDict[Sequence_FindClosestControlSource.Late[i]]); }
                 catch (Exception ex) { Debug.LogError(ex); }
             }
 
@@ -599,7 +525,7 @@ namespace CommNetManager
 
             for (int i = 0; i < Sequence_FindClosestControlSource.Post.Count; i++)
             {
-                try { value = AndOr(value, Sequence_FindClosestControlSource.Post[i].Invoke(from, path), invokesAndOr[Sequence_FindClosestControlSource.Post[i]]); }
+                try { value = AndOr(value, Sequence_FindClosestControlSource.Post[i].Invoke(from, path), Sequence_FindClosestControlSource.MetaDict[Sequence_FindClosestControlSource.Post[i]]); }
                 catch (Exception ex) { Debug.LogError(ex); }
             }
 
@@ -638,13 +564,13 @@ namespace CommNetManager
             bool value = true;
             for (int i = 0; i < Sequence_FindHome.Early.Count; i++)
             {
-                try { value = AndOr(value, Sequence_FindHome.Early[i].Invoke(from, path), invokesAndOr[Sequence_FindHome.Early[i]]); }
+                try { value = AndOr(value, Sequence_FindHome.Early[i].Invoke(from, path), Sequence_FindHome.MetaDict[Sequence_FindHome.Early[i]]); }
                 catch (Exception ex) { Debug.LogError(ex); }
             }
 
             for (int i = 0; i < Sequence_FindHome.Late.Count; i++)
             {
-                try { value = AndOr(value, Sequence_FindHome.Late[i].Invoke(from, path), invokesAndOr[Sequence_FindHome.Late[i]]); }
+                try { value = AndOr(value, Sequence_FindHome.Late[i].Invoke(from, path), Sequence_FindHome.MetaDict[Sequence_FindHome.Late[i]]); }
                 catch (Exception ex) { Debug.LogError(ex); }
             }
 
@@ -653,7 +579,7 @@ namespace CommNetManager
 
             for (int i = 0; i < Sequence_FindHome.Post.Count; i++)
             {
-                try { value = AndOr(value, Sequence_FindHome.Post[i].Invoke(from, path), invokesAndOr[Sequence_FindHome.Post[i]]); }
+                try { value = AndOr(value, Sequence_FindHome.Post[i].Invoke(from, path), Sequence_FindHome.MetaDict[Sequence_FindHome.Post[i]]); }
                 catch (Exception ex) { Debug.LogError(ex); }
             }
 
@@ -665,13 +591,13 @@ namespace CommNetManager
             bool value = true;
             for (int i = 0; i < Sequence_FindPath.Early.Count; i++)
             {
-                try { value = AndOr(value, Sequence_FindPath.Early[i].Invoke(start, path, end), invokesAndOr[Sequence_FindPath.Early[i]]); }
+                try { value = AndOr(value, Sequence_FindPath.Early[i].Invoke(start, path, end), Sequence_FindPath.MetaDict[Sequence_FindPath.Early[i]]); }
                 catch (Exception ex) { Debug.LogError(ex); }
             }
 
             for (int i = 0; i < Sequence_FindPath.Late.Count; i++)
             {
-                try { value = AndOr(value, Sequence_FindPath.Late[i].Invoke(start, path, end), invokesAndOr[Sequence_FindPath.Late[i]]); }
+                try { value = AndOr(value, Sequence_FindPath.Late[i].Invoke(start, path, end), Sequence_FindPath.MetaDict[Sequence_FindPath.Late[i]]); }
                 catch (Exception ex) { Debug.LogError(ex); }
             }
 
@@ -680,7 +606,7 @@ namespace CommNetManager
 
             for (int i = 0; i < Sequence_FindPath.Post.Count; i++)
             {
-                try { value = AndOr(value, Sequence_FindPath.Post[i].Invoke(start, path, end), invokesAndOr[Sequence_FindPath.Post[i]]); }
+                try { value = AndOr(value, Sequence_FindPath.Post[i].Invoke(start, path, end), Sequence_FindPath.MetaDict[Sequence_FindPath.Post[i]]); }
                 catch (Exception ex) { Debug.LogError(ex); }
             }
 
@@ -784,13 +710,13 @@ namespace CommNetManager
             bool value = true;
             for (int i = 0; i < Sequence_Remove_CommNode.Early.Count; i++)
             {
-                try { value = AndOr(value, Sequence_Remove_CommNode.Early[i].Invoke(conn), invokesAndOr[Sequence_Remove_CommNode.Early[i]]); }
+                try { value = AndOr(value, Sequence_Remove_CommNode.Early[i].Invoke(conn), Sequence_Remove_CommNode.MetaDict[Sequence_Remove_CommNode.Early[i]]); }
                 catch (Exception ex) { Debug.LogError(ex); }
             }
 
             for (int i = 0; i < Sequence_Remove_CommNode.Late.Count; i++)
             {
-                try { value = AndOr(value, Sequence_Remove_CommNode.Late[i].Invoke(conn), invokesAndOr[Sequence_Remove_CommNode.Late[i]]); }
+                try { value = AndOr(value, Sequence_Remove_CommNode.Late[i].Invoke(conn), Sequence_Remove_CommNode.MetaDict[Sequence_Remove_CommNode.Late[i]]); }
                 catch (Exception ex) { Debug.LogError(ex); }
             }
 
@@ -804,7 +730,7 @@ namespace CommNetManager
 
             for (int i = 0; i < Sequence_Remove_CommNode.Post.Count; i++)
             {
-                try { value = AndOr(value, Sequence_Remove_CommNode.Post[i].Invoke(conn), invokesAndOr[Sequence_Remove_CommNode.Post[i]]); }
+                try { value = AndOr(value, Sequence_Remove_CommNode.Post[i].Invoke(conn), Sequence_Remove_CommNode.MetaDict[Sequence_Remove_CommNode.Post[i]]); }
                 catch (Exception ex) { Debug.LogError(ex); }
             }
 
@@ -816,13 +742,13 @@ namespace CommNetManager
             bool value = true;
             for (int i = 0; i < Sequence_Remove_Occluder.Early.Count; i++)
             {
-                try { value = AndOr(value, Sequence_Remove_Occluder.Early[i].Invoke(conn), invokesAndOr[Sequence_Remove_Occluder.Early[i]]); }
+                try { value = AndOr(value, Sequence_Remove_Occluder.Early[i].Invoke(conn), Sequence_Remove_Occluder.MetaDict[Sequence_Remove_Occluder.Early[i]]); }
                 catch (Exception ex) { Debug.LogError(ex); }
             }
 
             for (int i = 0; i < Sequence_Remove_Occluder.Late.Count; i++)
             {
-                try { value = AndOr(value, Sequence_Remove_Occluder.Late[i].Invoke(conn), invokesAndOr[Sequence_Remove_Occluder.Late[i]]); }
+                try { value = AndOr(value, Sequence_Remove_Occluder.Late[i].Invoke(conn), Sequence_Remove_Occluder.MetaDict[Sequence_Remove_Occluder.Late[i]]); }
                 catch (Exception ex) { Debug.LogError(ex); }
             }
 
@@ -831,7 +757,7 @@ namespace CommNetManager
 
             for (int i = 0; i < Sequence_Remove_Occluder.Post.Count; i++)
             {
-                try { value = AndOr(value, Sequence_Remove_Occluder.Post[i].Invoke(conn), invokesAndOr[Sequence_Remove_Occluder.Post[i]]); }
+                try { value = AndOr(value, Sequence_Remove_Occluder.Post[i].Invoke(conn), Sequence_Remove_Occluder.MetaDict[Sequence_Remove_Occluder.Post[i]]); }
                 catch (Exception ex) { Debug.LogError(ex); }
             }
 
@@ -843,13 +769,13 @@ namespace CommNetManager
             bool value = true;
             for (int i = 0; i < Sequence_TestOcclusion.Early.Count; i++)
             {
-                try { value = AndOr(value, Sequence_TestOcclusion.Early[i].Invoke(aPos, a, bPos, b, distance), invokesAndOr[Sequence_TestOcclusion.Early[i]]); }
+                try { value = AndOr(value, Sequence_TestOcclusion.Early[i].Invoke(aPos, a, bPos, b, distance), Sequence_TestOcclusion.MetaDict[Sequence_TestOcclusion.Early[i]]); }
                 catch (Exception ex) { Debug.LogError(ex); }
             }
 
             for (int i = 0; i < Sequence_TestOcclusion.Late.Count; i++)
             {
-                try { value = AndOr(value, Sequence_TestOcclusion.Late[i].Invoke(aPos, a, bPos, b, distance), invokesAndOr[Sequence_TestOcclusion.Late[i]]); }
+                try { value = AndOr(value, Sequence_TestOcclusion.Late[i].Invoke(aPos, a, bPos, b, distance), Sequence_TestOcclusion.MetaDict[Sequence_TestOcclusion.Late[i]]); }
                 catch (Exception ex) { Debug.LogError(ex); }
             }
 
@@ -858,7 +784,7 @@ namespace CommNetManager
 
             for (int i = 0; i < Sequence_TestOcclusion.Post.Count; i++)
             {
-                try { value = AndOr(value, Sequence_TestOcclusion.Post[i].Invoke(aPos, a, bPos, b, distance), invokesAndOr[Sequence_TestOcclusion.Post[i]]); }
+                try { value = AndOr(value, Sequence_TestOcclusion.Post[i].Invoke(aPos, a, bPos, b, distance), Sequence_TestOcclusion.MetaDict[Sequence_TestOcclusion.Post[i]]); }
                 catch (Exception ex) { Debug.LogError(ex); }
             }
 
@@ -870,13 +796,13 @@ namespace CommNetManager
             bool value = true;
             for (int i = 0; i < Sequence_TryConnect.Early.Count; i++)
             {
-                try { value = AndOr(value, Sequence_TryConnect.Early[i].Invoke(a, b, distance, aCanRelay, bCanRelay, bothRelay), invokesAndOr[Sequence_TryConnect.Early[i]]); }
+                try { value = AndOr(value, Sequence_TryConnect.Early[i].Invoke(a, b, distance, aCanRelay, bCanRelay, bothRelay), Sequence_TryConnect.MetaDict[Sequence_TryConnect.Early[i]]); }
                 catch (Exception ex) { Debug.LogError(ex); }
             }
 
             for (int i = 0; i < Sequence_TryConnect.Late.Count; i++)
             {
-                try { value = AndOr(value, Sequence_TryConnect.Late[i].Invoke(a, b, distance, aCanRelay, bCanRelay, bothRelay), invokesAndOr[Sequence_TryConnect.Late[i]]); }
+                try { value = AndOr(value, Sequence_TryConnect.Late[i].Invoke(a, b, distance, aCanRelay, bCanRelay, bothRelay), Sequence_TryConnect.MetaDict[Sequence_TryConnect.Late[i]]); }
                 catch (Exception ex) { Debug.LogError(ex); }
             }
 
@@ -885,7 +811,7 @@ namespace CommNetManager
 
             for (int i = 0; i < Sequence_TryConnect.Post.Count; i++)
             {
-                try { value = AndOr(value, Sequence_TryConnect.Post[i].Invoke(a, b, distance, aCanRelay, bCanRelay, bothRelay), invokesAndOr[Sequence_TryConnect.Post[i]]); }
+                try { value = AndOr(value, Sequence_TryConnect.Post[i].Invoke(a, b, distance, aCanRelay, bCanRelay, bothRelay), Sequence_TryConnect.MetaDict[Sequence_TryConnect.Post[i]]); }
                 catch (Exception ex) { Debug.LogError(ex); }
             }
 
