@@ -9,7 +9,7 @@ namespace CommNetManagerAPI
     /// <summary>
     /// Derive from this class for CommNetManager to incorporate the methods into the VesselModule.
     /// </summary>
-    public class ModularCommNetVessel : UnityEngine.MonoBehaviour
+    public class ModularCommNetVessel
     {
         /// <summary>
         /// The CommNetVessel module to which this instance is attached.

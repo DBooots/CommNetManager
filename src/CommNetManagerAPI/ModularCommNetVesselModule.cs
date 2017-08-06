@@ -611,8 +611,8 @@ namespace CommNetManagerAPI
                 ModularCommNetVessel modularCommNetVesselInstance = null;
                 try
                 {
-                    //modularCommNetVesselInstance = Activator.CreateInstance(type, new object[] { this }) as ModularCommNetVessel;
-                    modularCommNetVesselInstance = gameObject.AddComponent(type) as ModularCommNetVessel;
+                    modularCommNetVesselInstance = Activator.CreateInstance(type, new object[] { this }) as ModularCommNetVessel;
+                    //modularCommNetVesselInstance = gameObject.AddComponent(type) as ModularCommNetVessel;
                     modularCommNetVesselInstance.CommNetVessel = this;
                 }
                 catch (Exception ex)
