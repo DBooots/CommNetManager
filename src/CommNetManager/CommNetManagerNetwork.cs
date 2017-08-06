@@ -59,7 +59,10 @@ namespace CommNetManager
             methodsSequence.Clear();
             andOrList.Clear();
 
-            networkTypes = AssemblyLoader.loadedTypes.FindAll(type => typeof(CommNetwork).IsAssignableFrom(type));// && type != typeof(CommNetwork) && type != typeof(CommNetManagerNetwork));
+            foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                networkTypes.AddRange(assembly.GetTypes().Where(type => typeof(CommNetwork).IsAssignableFrom(type) && !type.IsAbstract).ToList());
+            }
 
             foreach (Type type in networkTypes)
             {

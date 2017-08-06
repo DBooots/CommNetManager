@@ -538,7 +538,15 @@ namespace CommNetManagerAPI
             if (methodsLoaded)
                 return;
 
-            modularTypes = AssemblyLoader.loadedTypes.FindAll(type => typeof(ModularCommNetVessel).IsAssignableFrom(type) && type != typeof(ModularCommNetVessel));
+            //modularTypes = AssemblyLoader.loadedTypes.FindAll(type => typeof(ModularCommNetVessel).IsAssignableFrom(type) && type != typeof(ModularCommNetVessel));
+            //modularTypes = AssemblyLoader.loadedTypes.FindAll(type => type.IsSubclassOf(typeof(ModularCommNetVessel)));
+            modularTypes = new List<Type>();
+            foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                modularTypes.AddRange(assembly.GetTypes().Where(type => type.IsSubclassOf(typeof(ModularCommNetVessel))));
+                // typeof(ModularCommNetVessel).IsAssignableFrom(type) && !type.IsAbstract).ToList());
+            }
+
             foreach (Type type in modularTypes)
             {
                 MethodInfo[] methodsInType = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
