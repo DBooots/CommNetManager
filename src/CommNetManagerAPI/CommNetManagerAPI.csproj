@@ -56,8 +56,11 @@
     <Compile Include="CommNetExtensions.cs" />
     <Compile Include="CommNetManagerAttributes.cs" />
     <Compile Include="CommNetManagerChecker.cs" />
+    <Compile Include="ModularCommNetVessel.cs" />
+    <Compile Include="ModularCommNetVesselModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PublicCommNet.cs" />
+    <Compile Include="PublicCommNetVessel.cs" />
     <Compile Include="SequenceList.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
