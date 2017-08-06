@@ -73,17 +73,17 @@ namespace CommNetManagerAPI
         /// </summary>
         protected virtual void Update() { CommNetVesselAsPublic.Update(this); }
         /// <summary>
-        /// CAUTION: DO NOT CALL base.method when deriving!
+        /// Per KSP docs.
         /// </summary>
-        protected virtual void OnNetworkInitialized() { CommNetVesselAsPublic.OnNetworkInitialized(this); }
+        protected virtual void OnNetworkInitialized() { }
         /// <summary>
-        /// CAUTION: DO NOT CALL base.method when deriving!
+        /// Per KSP docs.
         /// </summary>
-        public virtual void OnNetworkPreUpdate() { CommNetVesselAsPublic.OnNetworkPreUpdate(this); }
+        public virtual void OnNetworkPreUpdate() { }
         /// <summary>
-        /// CAUTION: DO NOT CALL base.method when deriving!
+        /// Per KSP docs.
         /// </summary>
-        public virtual void OnNetworkPostUpdate() { CommNetVesselAsPublic.OnNetworkPostUpdate(this); }
+        public virtual void OnNetworkPostUpdate() { }
         /// <summary>
         /// CAUTION: DO NOT CALL base.method when deriving!
         /// </summary>
@@ -105,9 +105,9 @@ namespace CommNetManagerAPI
         /// </summary>
         public virtual Vessel.ControlLevel GetControlLevel() { return CommNetVesselAsPublic.GetControlLevel(this); }
         /// <summary>
-        /// CAUTION: DO NOT CALL base.method when deriving!
+        /// Per KSP docs.
         /// </summary>
-        protected virtual void OnMapFocusChange(MapObject target) { CommNetVesselAsPublic.OnMapFocusChange(this, target); }
+        protected virtual void OnMapFocusChange(MapObject target) { }
         /// <summary>
         /// CAUTION: DO NOT CALL base.method when deriving!
         /// </summary>

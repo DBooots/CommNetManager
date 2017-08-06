@@ -17,21 +17,6 @@ namespace CommNetManagerAPI
         /// <param name="callingInstance">The calling instance.</param>
         void Update(ModularCommNetVesselComponent callingInstance);
         /// <summary>
-        /// Called when network initialized.
-        /// </summary>
-        /// <param name="callingInstance">The calling instance.</param>
-        void OnNetworkInitialized(ModularCommNetVesselComponent callingInstance);
-        /// <summary>
-        /// Called when network pre update.
-        /// </summary>
-        /// <param name="callingInstance">The calling instance.</param>
-        void OnNetworkPreUpdate(ModularCommNetVesselComponent callingInstance);
-        /// <summary>
-        /// Called when network post update.
-        /// </summary>
-        /// <param name="callingInstance">The calling instance.</param>
-        void OnNetworkPostUpdate(ModularCommNetVesselComponent callingInstance);
-        /// <summary>
         /// Calculates the plasma mult.
         /// </summary>
         /// <param name="callingInstance">The calling instance.</param>
@@ -59,12 +44,6 @@ namespace CommNetManagerAPI
         /// <param name="callingInstance">The calling instance.</param>
         /// <returns></returns>
         Vessel.ControlLevel GetControlLevel(ModularCommNetVesselComponent callingInstance);
-        /// <summary>
-        /// Called when map focus changes.
-        /// </summary>
-        /// <param name="callingInstance">The calling instance.</param>
-        /// <param name="target">The target.</param>
-        void OnMapFocusChange(ModularCommNetVesselComponent callingInstance, MapObject target);
         /// <summary>
         /// Gets the signal strength modifier.
         /// </summary>

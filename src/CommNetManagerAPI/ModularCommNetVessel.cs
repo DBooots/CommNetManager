@@ -40,15 +40,15 @@ namespace CommNetManagerAPI
         private SequenceList<Action<ConfigNode>, ModularCommNetVesselComponent> Sequence_OnLoad = new SequenceList<Action<ConfigNode>, ModularCommNetVesselComponent>();
         private SequenceList<Action<ConfigNode>, ModularCommNetVesselComponent> Sequence_OnSave = new SequenceList<Action<ConfigNode>, ModularCommNetVesselComponent>();
         private SequenceList<Action, ModularCommNetVesselComponent> Sequence_Update = new SequenceList<Action, ModularCommNetVesselComponent>();
-        private SequenceList<Action, ModularCommNetVesselComponent> Sequence_OnNetworkInitialized = new SequenceList<Action, ModularCommNetVesselComponent>();
-        private SequenceList<Action, ModularCommNetVesselComponent> Sequence_OnNetworkPreUpdate = new SequenceList<Action, ModularCommNetVesselComponent>();
-        private SequenceList<Action, ModularCommNetVesselComponent> Sequence_OnNetworkPostUpdate = new SequenceList<Action, ModularCommNetVesselComponent>();
+        private SequenceList<Action> Sequence_OnNetworkInitialized = new SequenceList<Action>();
+        private SequenceList<Action> Sequence_OnNetworkPreUpdate = new SequenceList<Action>();
+        private SequenceList<Action> Sequence_OnNetworkPostUpdate = new SequenceList<Action>();
         private SequenceList<Action, ModularCommNetVesselComponent> Sequence_CalculatePlasmaMult = new SequenceList<Action, ModularCommNetVesselComponent>();
         private SequenceList<Action, ModularCommNetVesselComponent> Sequence_UpdateComm = new SequenceList<Action, ModularCommNetVesselComponent>();
         private SequenceList<Func<bool>, Pair<CNMAttrAndOr.options, ModularCommNetVesselComponent>> Sequence_CreateControlConnection = new SequenceList<Func<bool>, Pair<CNMAttrAndOr.options, ModularCommNetVesselComponent>>();
         private SequenceList<Func<IScienceDataTransmitter>, ModularCommNetVesselComponent> Sequence_GetBestTransmitter = new SequenceList<Func<IScienceDataTransmitter>, ModularCommNetVesselComponent>();
         private SequenceList<Func<Vessel.ControlLevel>, ModularCommNetVesselComponent> Sequence_GetControlLevel = new SequenceList<Func<Vessel.ControlLevel>, ModularCommNetVesselComponent>();
-        private SequenceList<Action<MapObject>, ModularCommNetVesselComponent> Sequence_OnMapFocusChange = new SequenceList<Action<MapObject>, ModularCommNetVesselComponent>();
+        private SequenceList<Action<MapObject>> Sequence_OnMapFocusChange = new SequenceList<Action<MapObject>>();
         private SequenceList<Func<CommNode, double>, ModularCommNetVesselComponent> Sequence_GetSignalStrengthModifier = new SequenceList<Func<CommNode, double>, ModularCommNetVesselComponent>();
 
         private class Pair<T1, T2>
@@ -232,18 +232,6 @@ namespace CommNetManagerAPI
         /// </summary>
         protected override void Update() { this.Update(null); }
         /// <summary>
-        /// Called when network initialized.
-        /// </summary>
-        protected override void OnNetworkInitialized() { this.OnNetworkInitialized(null); }
-        /// <summary>
-        /// Called when network pre update.
-        /// </summary>
-        public override void OnNetworkPreUpdate() { this.OnNetworkPreUpdate(null); }
-        /// <summary>
-        /// Called when network post update.
-        /// </summary>
-        public override void OnNetworkPostUpdate() { this.OnNetworkPostUpdate(null); }
-        /// <summary>
         /// Calculates the plasma mult.
         /// </summary>
         protected override void CalculatePlasmaMult() { this.CalculatePlasmaMult(null); }
@@ -265,11 +253,6 @@ namespace CommNetManagerAPI
         /// Gets the control level.
         /// </summary>
         public override Vessel.ControlLevel GetControlLevel() { return this.GetControlLevel(null); }
-        /// <summary>
-        /// Called when map focus changes.
-        /// </summary>
-        /// <param name="target">The target.</param>
-        protected override void OnMapFocusChange(MapObject target) { this.OnMapFocusChange(null, target); }
         /// <summary>
         /// Gets the signal strength modifier.
         /// </summary>
@@ -305,21 +288,16 @@ namespace CommNetManagerAPI
         /// <summary>
         /// Called when network initialized.
         /// </summary>
-        /// <param name="callingInstance">The calling instance.</param>
-        public void OnNetworkInitialized(ModularCommNetVesselComponent callingInstance)
+        public void OnNetworkInitialized()
         {
             for (int i = 0; i < Sequence_OnNetworkInitialized.EarlyLate.Count; i++)
             {
-                if (Sequence_OnNetworkInitialized.MetaDict[Sequence_OnNetworkInitialized.EarlyLate[i]] == callingInstance)
-                    continue;
                 try { Sequence_OnNetworkInitialized.EarlyLate[i].Invoke(); }
                 catch (Exception ex) { Debug.LogError(ex); }
             }
             base.OnNetworkInitialized();
             for (int i = 0; i < Sequence_OnNetworkInitialized.Post.Count; i++)
             {
-                if (Sequence_OnNetworkInitialized.MetaDict[Sequence_OnNetworkInitialized.Post[i]] == callingInstance)
-                    continue;
                 try { Sequence_OnNetworkInitialized.Post[i].Invoke(); }
                 catch (Exception ex) { Debug.LogError(ex); }
             }
@@ -328,21 +306,16 @@ namespace CommNetManagerAPI
         /// <summary>
         /// Called when network pre update.
         /// </summary>
-        /// <param name="callingInstance">The calling instance.</param>
-        public void OnNetworkPreUpdate(ModularCommNetVesselComponent callingInstance)
+        public void OnNetworkPreUpdate()
         {
             for (int i = 0; i < Sequence_OnNetworkPreUpdate.EarlyLate.Count; i++)
             {
-                if (Sequence_OnNetworkPreUpdate.MetaDict[Sequence_OnNetworkPreUpdate.EarlyLate[i]] == callingInstance)
-                    continue;
                 try { Sequence_OnNetworkPreUpdate.EarlyLate[i].Invoke(); }
                 catch (Exception ex) { Debug.LogError(ex); }
             }
             base.OnNetworkPreUpdate();
             for (int i = 0; i < Sequence_OnNetworkPreUpdate.Post.Count; i++)
             {
-                if (Sequence_OnNetworkPreUpdate.MetaDict[Sequence_OnNetworkPreUpdate.Post[i]] == callingInstance)
-                    continue;
                 try { Sequence_OnNetworkPreUpdate.Post[i].Invoke(); }
                 catch (Exception ex) { Debug.LogError(ex); }
             }
@@ -351,21 +324,16 @@ namespace CommNetManagerAPI
         /// <summary>
         /// Called when network post update.
         /// </summary>
-        /// <param name="callingInstance">The calling instance.</param>
-        public void OnNetworkPostUpdate(ModularCommNetVesselComponent callingInstance)
+        public void OnNetworkPostUpdate()
         {
             for (int i = 0; i < Sequence_OnNetworkPostUpdate.EarlyLate.Count; i++)
             {
-                if (Sequence_OnNetworkPostUpdate.MetaDict[Sequence_OnNetworkPostUpdate.EarlyLate[i]] == callingInstance)
-                    continue;
                 try { Sequence_OnNetworkPostUpdate.EarlyLate[i].Invoke(); }
                 catch (Exception ex) { Debug.LogError(ex); }
             }
             base.OnNetworkPostUpdate();
             for (int i = 0; i < Sequence_OnNetworkPostUpdate.Post.Count; i++)
             {
-                if (Sequence_OnNetworkPostUpdate.MetaDict[Sequence_OnNetworkPostUpdate.Post[i]] == callingInstance)
-                    continue;
                 try { Sequence_OnNetworkPostUpdate.Post[i].Invoke(); }
                 catch (Exception ex) { Debug.LogError(ex); }
             }
@@ -497,22 +465,17 @@ namespace CommNetManagerAPI
         /// <summary>
         /// Called when map focus changes.
         /// </summary>
-        /// <param name="callingInstance">The calling instance.</param>
         /// <param name="target">The target.</param>
-        public void OnMapFocusChange(ModularCommNetVesselComponent callingInstance, MapObject target)
+        public void OnMapFocusChange(MapObject target)
         {
             for (int i = 0; i < Sequence_OnMapFocusChange.EarlyLate.Count; i++)
             {
-                if (Sequence_OnMapFocusChange.MetaDict[Sequence_OnMapFocusChange.EarlyLate[i]] == callingInstance)
-                    continue;
                 try { Sequence_OnMapFocusChange.EarlyLate[i].Invoke(target); }
                 catch (Exception ex) { Debug.LogError(ex); }
             }
             base.OnMapFocusChange(target);
             for (int i = 0; i < Sequence_OnMapFocusChange.Post.Count; i++)
             {
-                if (Sequence_OnMapFocusChange.MetaDict[Sequence_OnMapFocusChange.Post[i]] == callingInstance)
-                    continue;
                 try { Sequence_OnMapFocusChange.Post[i].Invoke(target); }
                 catch (Exception ex) { Debug.LogError(ex); }
             }
@@ -745,13 +708,13 @@ namespace CommNetManagerAPI
                         Sequence_Update.Add(sequence, Delegate.CreateDelegate(typeof(Action), instance, method) as Action, instance);
                         break;
                     case "OnNetworkInitialized":
-                        Sequence_OnNetworkInitialized.Add(sequence, Delegate.CreateDelegate(typeof(Action), instance, method) as Action, instance);
+                        Sequence_OnNetworkInitialized.Add(sequence, Delegate.CreateDelegate(typeof(Action), instance, method) as Action);
                         break;
                     case "OnNetworkPreUpdate":
-                        Sequence_OnNetworkPreUpdate.Add(sequence, Delegate.CreateDelegate(typeof(Action), instance, method) as Action, instance);
+                        Sequence_OnNetworkPreUpdate.Add(sequence, Delegate.CreateDelegate(typeof(Action), instance, method) as Action);
                         break;
                     case "OnNetworkPostUpdate":
-                        Sequence_OnNetworkPostUpdate.Add(sequence, Delegate.CreateDelegate(typeof(Action), instance, method) as Action, instance);
+                        Sequence_OnNetworkPostUpdate.Add(sequence, Delegate.CreateDelegate(typeof(Action), instance, method) as Action);
                         break;
                     case "CalculatePlasmaMult":
                         Sequence_CalculatePlasmaMult.Add(sequence, Delegate.CreateDelegate(typeof(Action), instance, method) as Action, instance);
@@ -769,7 +732,7 @@ namespace CommNetManagerAPI
                         Sequence_GetControlLevel.Add(sequence, Delegate.CreateDelegate(typeof(Func<Vessel.ControlLevel>), instance, method) as Func<Vessel.ControlLevel>, instance);
                         break;
                     case "OnMapFocusChange":
-                        Sequence_OnMapFocusChange.Add(sequence, Delegate.CreateDelegate(typeof(Action<MapObject>), instance, method) as Action<MapObject>, instance);
+                        Sequence_OnMapFocusChange.Add(sequence, Delegate.CreateDelegate(typeof(Action<MapObject>), instance, method) as Action<MapObject>);
                         break;
                     case "GetSignalStrengthModifier":
                         Sequence_GetSignalStrengthModifier.Add(sequence, Delegate.CreateDelegate(typeof(Func<CommNode, double>), instance, method) as Func<CommNode, double>, instance);
