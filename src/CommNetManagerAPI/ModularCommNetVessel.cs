@@ -9,8 +9,16 @@ namespace CommNetManagerAPI
     /// <summary>
     /// Derive from this class for CommNetManager to incorporate the methods into the VesselModule.
     /// </summary>
-    public class ModularCommNetVessel
+    public class ModularCommNetVessel : UnityEngine.MonoBehaviour
     {
+        /// <summary>
+        /// Per KSP VesselModule
+        /// </summary>
+        protected Vessel vessel;
+        /// <summary>
+        /// Per KSP VesselModule
+        /// </summary>
+        public Vessel Vessel { get { return this.vessel; } }
         /// <summary>
         /// The CommNetVessel module to which this instance is attached.
         /// </summary>
@@ -21,6 +29,7 @@ namespace CommNetManagerAPI
             {
                 _CommNetVessel = value;
                 CommNetVesselAsPublic = value;
+                this.vessel = value.Vessel;
             }
         }
         private ModularCommNetVesselModule _CommNetVessel;
@@ -59,10 +68,6 @@ namespace CommNetManagerAPI
         /// Per Unity docs.
         /// </summary>
         protected virtual void OnStart() { }
-        /// <summary>
-        /// Per Unity docs.
-        /// </summary>
-        protected virtual void OnDestroy() { }
         /// <summary>
         /// CAUTION: DO NOT CALL base.method when deriving!
         /// </summary>

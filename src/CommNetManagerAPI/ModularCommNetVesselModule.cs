@@ -15,6 +15,7 @@ namespace CommNetManagerAPI
     /// <seealso cref="CommNetManagerAPI.PublicCommNetVessel" />
     public sealed class ModularCommNetVesselModule : CommNetVessel, PublicCommNetVessel
     {
+        private static Assembly electionWinner = null;
         private static Dictionary<MethodInfo, Type> methodTypes = new Dictionary<MethodInfo, Type>();
         private Dictionary<Type, ModularCommNetVessel> modularRefs = new Dictionary<Type, ModularCommNetVessel>();
         private static Dictionary<string, SequenceList<MethodInfo>> methodsSequence = new Dictionary<string, SequenceList<MethodInfo>>();
@@ -63,13 +64,45 @@ namespace CommNetManagerAPI
         #endregion
 
         /// <summary>
+        /// Gets the ModularCommNetVessel instance of the specified type.
+        /// </summary>
+        /// <typeparam name="T">The type to get.</typeparam>
+        /// <returns></returns>
+        public T GetModuleOfType<T>() where T : ModularCommNetVessel
+        {
+            ModularCommNetVessel value;
+            if (!modularRefs.TryGetValue(typeof(T), out value))
+                return null;
+            return (T)value;
+            //return this.ModularCommNetVessels.FirstOrDefault(module => module is T);
+        }
+        /// <summary>
+        /// Gets the ModularCommNetVessel instance of the specified type.
+        /// </summary>
+        /// <param name="type">The type to get.</param>
+        /// <returns></returns>
+        public ModularCommNetVessel GetModuleOfType(Type type)
+        {
+            ModularCommNetVessel value;
+            if (!modularRefs.TryGetValue(type, out value))
+                return null;
+            return value;
+            //return this.ModularCommNetVessels.FirstOrDefault(module => module.GetType() == type);
+        }
+
+        /// <summary>
         /// Per Unity docs.
         /// </summary>
         protected override void OnAwake()
         {
             if (!AmITheOne())
             {
-                Destroy(this);
+                DestroyImmediate(this);
+                return;
+            }
+            if (this.vessel == null)
+            {
+                Debug.LogWarning("OnAwake: Vessel is null.");
                 return;
             }
             this.InstantiateModularTypes();
@@ -90,6 +123,7 @@ namespace CommNetManagerAPI
         /// </summary>
         protected override void OnStart()
         {
+            Debug.Log("OnStart: " + this.vessel != null ? this.vessel.name : "");
             if (this.ModularCommNetVessels == null)
                 this.InstantiateModularTypes();
             for (int i = 0; i < Sequence_OnStart.EarlyLate.Count; i++)
@@ -109,17 +143,11 @@ namespace CommNetManagerAPI
         /// </summary>
         protected override void OnDestroy()
         {
-            for (int i = 0; i < Sequence_OnDestroy.EarlyLate.Count; i++)
+            foreach (ModularCommNetVessel module in this.modularRefs.Values)
             {
-                try { Sequence_OnDestroy.EarlyLate[i].Invoke(); }
-                catch (Exception ex) { Debug.LogError(ex); }
+                Destroy(module);
             }
             base.OnDestroy();
-            for (int i = 0; i < Sequence_OnDestroy.Post.Count; i++)
-            {
-                try { Sequence_OnDestroy.Post[i].Invoke(); }
-                catch (Exception ex) { Debug.LogError(ex); }
-            }
         }
         /// <summary>
         /// Per KSP docs.
@@ -588,6 +616,7 @@ namespace CommNetManagerAPI
         public void InstantiateModularTypes()
         {
             LoadModularTypes();
+            modularRefs.Clear();
             this.ModularCommNetVessels = new List<ModularCommNetVessel>();
             Sequence_Awake.Clear();
             Sequence_OnAwake.Clear();
@@ -609,6 +638,7 @@ namespace CommNetManagerAPI
             Sequence_OnMapFocusChange.Clear();
             Sequence_GetSignalStrengthModifier.Clear();
 
+            Debug.Log("CNMAPI: ModularVessel: Instantiate " + modularTypes.Count);
             foreach (Type type in modularTypes)
             {
                 if (type == typeof(ModularCommNetVessel))
@@ -619,8 +649,14 @@ namespace CommNetManagerAPI
                 ModularCommNetVessel modularCommNetVesselInstance = null;
                 try
                 {
-                    modularCommNetVesselInstance = Activator.CreateInstance(type, new object[] { this }) as ModularCommNetVessel;
-                    //modularCommNetVesselInstance = gameObject.AddComponent(type) as ModularCommNetVessel;
+                    /*if (type.GetConstructor(new Type[] { typeof(ModularCommNetVesselModule) }) != null)
+                        modularCommNetVesselInstance = Activator.CreateInstance(type, new object[] { this }) as ModularCommNetVessel;
+                    else
+                    {
+                        modularCommNetVesselInstance = Activator.CreateInstance(type) as ModularCommNetVessel;
+                    }*/
+                    //modularCommNetVesselInstance = Activator.CreateInstance(type, new object[] { this }) as ModularCommNetVessel;
+                    modularCommNetVesselInstance = gameObject.AddComponent(type) as ModularCommNetVessel;
                     modularCommNetVesselInstance.CommNetVessel = this;
                 }
                 catch (Exception ex)
@@ -706,37 +742,37 @@ namespace CommNetManagerAPI
                         Sequence_OnSave.Add(sequence, Delegate.CreateDelegate(typeof(Action<ConfigNode>), instance, method) as Action<ConfigNode>, instance);
                         break;
                     case "Update":
-                        Sequence_Update.Add(sequence, Delegate.CreateDelegate(typeof(Action), instance, method) as Action);
+                        Sequence_Update.Add(sequence, Delegate.CreateDelegate(typeof(Action), instance, method) as Action, instance);
                         break;
                     case "OnNetworkInitialized":
-                        Sequence_OnNetworkInitialized.Add(sequence, Delegate.CreateDelegate(typeof(Action), instance, method) as Action);
+                        Sequence_OnNetworkInitialized.Add(sequence, Delegate.CreateDelegate(typeof(Action), instance, method) as Action, instance);
                         break;
                     case "OnNetworkPreUpdate":
-                        Sequence_OnNetworkPreUpdate.Add(sequence, Delegate.CreateDelegate(typeof(Action), instance, method) as Action);
+                        Sequence_OnNetworkPreUpdate.Add(sequence, Delegate.CreateDelegate(typeof(Action), instance, method) as Action, instance);
                         break;
                     case "OnNetworkPostUpdate":
-                        Sequence_OnNetworkPostUpdate.Add(sequence, Delegate.CreateDelegate(typeof(Action), instance, method) as Action);
+                        Sequence_OnNetworkPostUpdate.Add(sequence, Delegate.CreateDelegate(typeof(Action), instance, method) as Action, instance);
                         break;
                     case "CalculatePlasmaMult":
-                        Sequence_CalculatePlasmaMult.Add(sequence, Delegate.CreateDelegate(typeof(Action), instance, method) as Action);
+                        Sequence_CalculatePlasmaMult.Add(sequence, Delegate.CreateDelegate(typeof(Action), instance, method) as Action, instance);
                         break;
                     case "UpdateComm":
-                        Sequence_UpdateComm.Add(sequence, Delegate.CreateDelegate(typeof(Action), instance, method) as Action);
+                        Sequence_UpdateComm.Add(sequence, Delegate.CreateDelegate(typeof(Action), instance, method) as Action, instance);
                         break;
                     case "CreateControlConnection":
                         Sequence_CreateControlConnection.Add(sequence, Delegate.CreateDelegate(typeof(Func<bool>), instance, method) as Func<bool>, new Pair<CNMAttrAndOr.options, ModularCommNetVessel>(andOrList[method], instance));
                         break;
                     case "GetBestTransmitter":
-                        Sequence_GetBestTransmitter.Add(sequence, Delegate.CreateDelegate(typeof(Func<IScienceDataTransmitter>), instance, method) as Func<IScienceDataTransmitter>);
+                        Sequence_GetBestTransmitter.Add(sequence, Delegate.CreateDelegate(typeof(Func<IScienceDataTransmitter>), instance, method) as Func<IScienceDataTransmitter>, instance);
                         break;
                     case "GetControlLevel":
-                        Sequence_GetControlLevel.Add(sequence, Delegate.CreateDelegate(typeof(Func<Vessel.ControlLevel>), instance, method) as Func<Vessel.ControlLevel>);
+                        Sequence_GetControlLevel.Add(sequence, Delegate.CreateDelegate(typeof(Func<Vessel.ControlLevel>), instance, method) as Func<Vessel.ControlLevel>, instance);
                         break;
                     case "OnMapFocusChange":
-                        Sequence_OnMapFocusChange.Add(sequence, Delegate.CreateDelegate(typeof(Action<MapObject>), instance, method) as Action<MapObject>);
+                        Sequence_OnMapFocusChange.Add(sequence, Delegate.CreateDelegate(typeof(Action<MapObject>), instance, method) as Action<MapObject>, instance);
                         break;
                     case "GetSignalStrengthModifier":
-                        Sequence_GetSignalStrengthModifier.Add(sequence, Delegate.CreateDelegate(typeof(Func<CommNode, double>), instance, method) as Func<CommNode, double>);
+                        Sequence_GetSignalStrengthModifier.Add(sequence, Delegate.CreateDelegate(typeof(Func<CommNode, double>), instance, method) as Func<CommNode, double>, instance);
                         break;
                     default:
                         Debug.LogWarning("CommNetManager: The method passed (" + methodName + ") was not a standard CommNet method.");
@@ -755,6 +791,9 @@ namespace CommNetManagerAPI
         {
             // Credit to Sarbian and/or Ialdabaoth for this method. #AllHailNyanCat
             Assembly currentAssembly = Assembly.GetExecutingAssembly();
+            if (electionWinner != null)
+                return currentAssembly == electionWinner;
+
             IEnumerable<AssemblyLoader.LoadedAssembly> eligible = from a in AssemblyLoader.loadedAssemblies
                                                                   let ass = a.assembly
                                                                   where ass.GetName().Name == currentAssembly.GetName().Name
@@ -769,6 +808,7 @@ namespace CommNetManagerAPI
                 //loaded = true;
                 UnityEngine.Debug.Log("CNMAPI: version " + currentAssembly.GetName().Version + " at " + currentAssembly.Location +
                     " lost the election");
+                DestroyImmediate(this);
                 Destroy(this);
                 return false;
             }
@@ -784,6 +824,7 @@ namespace CommNetManagerAPI
                     " won the election against\n" + candidates);
             }
 
+            electionWinner = eligible.First().assembly;
             return true;
         }
         #endregion
