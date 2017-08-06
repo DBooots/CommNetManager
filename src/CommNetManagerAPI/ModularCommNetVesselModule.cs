@@ -13,11 +13,11 @@ namespace CommNetManagerAPI
     /// </summary>
     /// <seealso cref="CommNet.CommNetVessel" />
     /// <seealso cref="CommNetManagerAPI.PublicCommNetVessel" />
-    public sealed class ModularCommNetVesselModule : CommNetVessel, PublicCommNetVessel
+    public sealed class ModularCommNetVessel : CommNetVessel, PublicCommNetVessel
     {
         private static Assembly electionWinner = null;
         private static Dictionary<MethodInfo, Type> methodTypes = new Dictionary<MethodInfo, Type>();
-        private Dictionary<Type, ModularCommNetVessel> modularRefs = new Dictionary<Type, ModularCommNetVessel>();
+        private Dictionary<Type, ModularCommNetVesselComponent> modularRefs = new Dictionary<Type, ModularCommNetVesselComponent>();
         private static Dictionary<string, SequenceList<MethodInfo>> methodsSequence = new Dictionary<string, SequenceList<MethodInfo>>();
         private static Dictionary<MethodInfo, CNMAttrAndOr.options> andOrList = new Dictionary<MethodInfo, CNMAttrAndOr.options>();
         private static bool methodsLoaded = false;
@@ -27,7 +27,7 @@ namespace CommNetManagerAPI
         /// <summary>
         /// The modular CommNetVessels implemented in this type.
         /// </summary>
-        public List<ModularCommNetVessel> ModularCommNetVessels { get; internal set; } = null;
+        public List<ModularCommNetVesselComponent> ModularCommNetVessels { get; internal set; } = null;
 
         #region SequenceList<Delegate> for each inherited method
 
@@ -37,19 +37,19 @@ namespace CommNetManagerAPI
         private SequenceList<Action> Sequence_OnDestroy = new SequenceList<Action>();
         private SequenceList<Action> Sequence_OnGoOffRails = new SequenceList<Action>();
         private SequenceList<Action> Sequence_OnGoOnRails = new SequenceList<Action>();
-        private SequenceList<Action<ConfigNode>, ModularCommNetVessel> Sequence_OnLoad = new SequenceList<Action<ConfigNode>, ModularCommNetVessel>();
-        private SequenceList<Action<ConfigNode>, ModularCommNetVessel> Sequence_OnSave = new SequenceList<Action<ConfigNode>, ModularCommNetVessel>();
-        private SequenceList<Action, ModularCommNetVessel> Sequence_Update = new SequenceList<Action, ModularCommNetVessel>();
-        private SequenceList<Action, ModularCommNetVessel> Sequence_OnNetworkInitialized = new SequenceList<Action, ModularCommNetVessel>();
-        private SequenceList<Action, ModularCommNetVessel> Sequence_OnNetworkPreUpdate = new SequenceList<Action, ModularCommNetVessel>();
-        private SequenceList<Action, ModularCommNetVessel> Sequence_OnNetworkPostUpdate = new SequenceList<Action, ModularCommNetVessel>();
-        private SequenceList<Action, ModularCommNetVessel> Sequence_CalculatePlasmaMult = new SequenceList<Action, ModularCommNetVessel>();
-        private SequenceList<Action, ModularCommNetVessel> Sequence_UpdateComm = new SequenceList<Action, ModularCommNetVessel>();
-        private SequenceList<Func<bool>, Pair<CNMAttrAndOr.options, ModularCommNetVessel>> Sequence_CreateControlConnection = new SequenceList<Func<bool>, Pair<CNMAttrAndOr.options, ModularCommNetVessel>>();
-        private SequenceList<Func<IScienceDataTransmitter>, ModularCommNetVessel> Sequence_GetBestTransmitter = new SequenceList<Func<IScienceDataTransmitter>, ModularCommNetVessel>();
-        private SequenceList<Func<Vessel.ControlLevel>, ModularCommNetVessel> Sequence_GetControlLevel = new SequenceList<Func<Vessel.ControlLevel>, ModularCommNetVessel>();
-        private SequenceList<Action<MapObject>, ModularCommNetVessel> Sequence_OnMapFocusChange = new SequenceList<Action<MapObject>, ModularCommNetVessel>();
-        private SequenceList<Func<CommNode, double>, ModularCommNetVessel> Sequence_GetSignalStrengthModifier = new SequenceList<Func<CommNode, double>, ModularCommNetVessel>();
+        private SequenceList<Action<ConfigNode>, ModularCommNetVesselComponent> Sequence_OnLoad = new SequenceList<Action<ConfigNode>, ModularCommNetVesselComponent>();
+        private SequenceList<Action<ConfigNode>, ModularCommNetVesselComponent> Sequence_OnSave = new SequenceList<Action<ConfigNode>, ModularCommNetVesselComponent>();
+        private SequenceList<Action, ModularCommNetVesselComponent> Sequence_Update = new SequenceList<Action, ModularCommNetVesselComponent>();
+        private SequenceList<Action, ModularCommNetVesselComponent> Sequence_OnNetworkInitialized = new SequenceList<Action, ModularCommNetVesselComponent>();
+        private SequenceList<Action, ModularCommNetVesselComponent> Sequence_OnNetworkPreUpdate = new SequenceList<Action, ModularCommNetVesselComponent>();
+        private SequenceList<Action, ModularCommNetVesselComponent> Sequence_OnNetworkPostUpdate = new SequenceList<Action, ModularCommNetVesselComponent>();
+        private SequenceList<Action, ModularCommNetVesselComponent> Sequence_CalculatePlasmaMult = new SequenceList<Action, ModularCommNetVesselComponent>();
+        private SequenceList<Action, ModularCommNetVesselComponent> Sequence_UpdateComm = new SequenceList<Action, ModularCommNetVesselComponent>();
+        private SequenceList<Func<bool>, Pair<CNMAttrAndOr.options, ModularCommNetVesselComponent>> Sequence_CreateControlConnection = new SequenceList<Func<bool>, Pair<CNMAttrAndOr.options, ModularCommNetVesselComponent>>();
+        private SequenceList<Func<IScienceDataTransmitter>, ModularCommNetVesselComponent> Sequence_GetBestTransmitter = new SequenceList<Func<IScienceDataTransmitter>, ModularCommNetVesselComponent>();
+        private SequenceList<Func<Vessel.ControlLevel>, ModularCommNetVesselComponent> Sequence_GetControlLevel = new SequenceList<Func<Vessel.ControlLevel>, ModularCommNetVesselComponent>();
+        private SequenceList<Action<MapObject>, ModularCommNetVesselComponent> Sequence_OnMapFocusChange = new SequenceList<Action<MapObject>, ModularCommNetVesselComponent>();
+        private SequenceList<Func<CommNode, double>, ModularCommNetVesselComponent> Sequence_GetSignalStrengthModifier = new SequenceList<Func<CommNode, double>, ModularCommNetVesselComponent>();
 
         private class Pair<T1, T2>
         {
@@ -68,9 +68,9 @@ namespace CommNetManagerAPI
         /// </summary>
         /// <typeparam name="T">The type to get.</typeparam>
         /// <returns></returns>
-        public T GetModuleOfType<T>() where T : ModularCommNetVessel
+        public T GetModuleOfType<T>() where T : ModularCommNetVesselComponent
         {
-            ModularCommNetVessel value;
+            ModularCommNetVesselComponent value;
             if (!modularRefs.TryGetValue(typeof(T), out value))
                 return null;
             return (T)value;
@@ -81,9 +81,9 @@ namespace CommNetManagerAPI
         /// </summary>
         /// <param name="type">The type to get.</param>
         /// <returns></returns>
-        public ModularCommNetVessel GetModuleOfType(Type type)
+        public ModularCommNetVesselComponent GetModuleOfType(Type type)
         {
-            ModularCommNetVessel value;
+            ModularCommNetVesselComponent value;
             if (!modularRefs.TryGetValue(type, out value))
                 return null;
             return value;
@@ -143,7 +143,7 @@ namespace CommNetManagerAPI
         /// </summary>
         protected override void OnDestroy()
         {
-            foreach (ModularCommNetVessel module in this.modularRefs.Values)
+            foreach (ModularCommNetVesselComponent module in this.modularRefs.Values)
             {
                 Destroy(module);
             }
@@ -283,7 +283,7 @@ namespace CommNetManagerAPI
         /// Update
         /// </summary>
         /// <param name="callingInstance">The calling instance.</param>
-        public void Update(ModularCommNetVessel callingInstance)
+        public void Update(ModularCommNetVesselComponent callingInstance)
         {
             for (int i = 0; i < Sequence_Update.EarlyLate.Count; i++)
             {
@@ -306,7 +306,7 @@ namespace CommNetManagerAPI
         /// Called when network initialized.
         /// </summary>
         /// <param name="callingInstance">The calling instance.</param>
-        public void OnNetworkInitialized(ModularCommNetVessel callingInstance)
+        public void OnNetworkInitialized(ModularCommNetVesselComponent callingInstance)
         {
             for (int i = 0; i < Sequence_OnNetworkInitialized.EarlyLate.Count; i++)
             {
@@ -329,7 +329,7 @@ namespace CommNetManagerAPI
         /// Called when network pre update.
         /// </summary>
         /// <param name="callingInstance">The calling instance.</param>
-        public void OnNetworkPreUpdate(ModularCommNetVessel callingInstance)
+        public void OnNetworkPreUpdate(ModularCommNetVesselComponent callingInstance)
         {
             for (int i = 0; i < Sequence_OnNetworkPreUpdate.EarlyLate.Count; i++)
             {
@@ -352,7 +352,7 @@ namespace CommNetManagerAPI
         /// Called when network post update.
         /// </summary>
         /// <param name="callingInstance">The calling instance.</param>
-        public void OnNetworkPostUpdate(ModularCommNetVessel callingInstance)
+        public void OnNetworkPostUpdate(ModularCommNetVesselComponent callingInstance)
         {
             for (int i = 0; i < Sequence_OnNetworkPostUpdate.EarlyLate.Count; i++)
             {
@@ -375,7 +375,7 @@ namespace CommNetManagerAPI
         /// Calculates the plasma mult.
         /// </summary>
         /// <param name="callingInstance">The calling instance.</param>
-        public void CalculatePlasmaMult(ModularCommNetVessel callingInstance)
+        public void CalculatePlasmaMult(ModularCommNetVesselComponent callingInstance)
         {
             for (int i = 0; i < Sequence_CalculatePlasmaMult.EarlyLate.Count; i++)
             {
@@ -398,7 +398,7 @@ namespace CommNetManagerAPI
         /// Updates the Comm field.
         /// </summary>
         /// <param name="callingInstance">The calling instance.</param>
-        public void UpdateComm(ModularCommNetVessel callingInstance)
+        public void UpdateComm(ModularCommNetVesselComponent callingInstance)
         {
             for (int i = 0; i < Sequence_UpdateComm.EarlyLate.Count; i++)
             {
@@ -422,7 +422,7 @@ namespace CommNetManagerAPI
         /// </summary>
         /// <param name="callingInstance">The calling instance.</param>
         /// <returns></returns>
-        public bool CreateControlConnection(ModularCommNetVessel callingInstance)
+        public bool CreateControlConnection(ModularCommNetVesselComponent callingInstance)
         {
             bool value = true;
             for (int i = 0; i < Sequence_CreateControlConnection.EarlyLate.Count; i++)
@@ -448,7 +448,7 @@ namespace CommNetManagerAPI
         /// </summary>
         /// <param name="callingInstance">The calling instance.</param>
         /// <returns></returns>
-        public IScienceDataTransmitter GetBestTransmitter(ModularCommNetVessel callingInstance)
+        public IScienceDataTransmitter GetBestTransmitter(ModularCommNetVesselComponent callingInstance)
         {
             IScienceDataTransmitter value;
             for (int i = 0; i < Sequence_GetBestTransmitter.EarlyLate.Count; i++)
@@ -473,7 +473,7 @@ namespace CommNetManagerAPI
         /// Gets the control level.
         /// </summary>
         /// <param name="callingInstance">The calling instance.</param>
-        public Vessel.ControlLevel GetControlLevel(ModularCommNetVessel callingInstance)
+        public Vessel.ControlLevel GetControlLevel(ModularCommNetVesselComponent callingInstance)
         {
             Vessel.ControlLevel value;
             for (int i = 0; i < Sequence_GetControlLevel.EarlyLate.Count; i++)
@@ -499,7 +499,7 @@ namespace CommNetManagerAPI
         /// </summary>
         /// <param name="callingInstance">The calling instance.</param>
         /// <param name="target">The target.</param>
-        public void OnMapFocusChange(ModularCommNetVessel callingInstance, MapObject target)
+        public void OnMapFocusChange(ModularCommNetVesselComponent callingInstance, MapObject target)
         {
             for (int i = 0; i < Sequence_OnMapFocusChange.EarlyLate.Count; i++)
             {
@@ -524,7 +524,7 @@ namespace CommNetManagerAPI
         /// <param name="callingInstance">The calling instance.</param>
         /// <param name="b">The other node.</param>
         /// <returns></returns>
-        public double GetSignalStrengthModifier(ModularCommNetVessel callingInstance, CommNode b)
+        public double GetSignalStrengthModifier(ModularCommNetVesselComponent callingInstance, CommNode b)
         {
             double value = 0;
             for (int i = 0; i < Sequence_GetSignalStrengthModifier.EarlyLate.Count; i++)
@@ -571,7 +571,7 @@ namespace CommNetManagerAPI
             modularTypes = new List<Type>();
             foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
-                modularTypes.AddRange(assembly.GetTypes().Where(type => type.IsSubclassOf(typeof(ModularCommNetVessel))));
+                modularTypes.AddRange(assembly.GetTypes().Where(type => type.IsSubclassOf(typeof(ModularCommNetVesselComponent))));
                 // typeof(ModularCommNetVessel).IsAssignableFrom(type) && !type.IsAbstract).ToList());
             }
 
@@ -617,7 +617,7 @@ namespace CommNetManagerAPI
         {
             LoadModularTypes();
             modularRefs.Clear();
-            this.ModularCommNetVessels = new List<ModularCommNetVessel>();
+            this.ModularCommNetVessels = new List<ModularCommNetVesselComponent>();
             Sequence_Awake.Clear();
             Sequence_OnAwake.Clear();
             Sequence_OnStart.Clear();
@@ -641,12 +641,12 @@ namespace CommNetManagerAPI
             Debug.Log("CNMAPI: ModularVessel: Instantiate " + modularTypes.Count);
             foreach (Type type in modularTypes)
             {
-                if (type == typeof(ModularCommNetVessel))
+                if (type == typeof(ModularCommNetVesselComponent))
                 {
                     Debug.Log("CommNetManager: Skipping type " + type.Name);
                     continue;
                 }
-                ModularCommNetVessel modularCommNetVesselInstance = null;
+                ModularCommNetVesselComponent modularCommNetVesselInstance = null;
                 try
                 {
                     /*if (type.GetConstructor(new Type[] { typeof(ModularCommNetVesselModule) }) != null)
@@ -656,7 +656,7 @@ namespace CommNetManagerAPI
                         modularCommNetVesselInstance = Activator.CreateInstance(type) as ModularCommNetVessel;
                     }*/
                     //modularCommNetVesselInstance = Activator.CreateInstance(type, new object[] { this }) as ModularCommNetVessel;
-                    modularCommNetVesselInstance = gameObject.AddComponent(type) as ModularCommNetVessel;
+                    modularCommNetVesselInstance = gameObject.AddComponent(type) as ModularCommNetVesselComponent;
                     modularCommNetVesselInstance.CommNetVessel = this;
                 }
                 catch (Exception ex)
@@ -706,7 +706,7 @@ namespace CommNetManagerAPI
         }
         private void ParseDelegates(string methodName, MethodInfo method, CNMAttrSequence.options sequence)
         {
-            ModularCommNetVessel instance = modularRefs[methodTypes[method]];
+            ModularCommNetVesselComponent instance = modularRefs[methodTypes[method]];
 
             if (andOrList.ContainsKey(method))
                 Debug.LogFormat("CommNetManager: Parsing {0} from {1} as {2} with {3}.", methodName, instance.GetType().Name, sequence, andOrList[method]);
@@ -760,7 +760,7 @@ namespace CommNetManagerAPI
                         Sequence_UpdateComm.Add(sequence, Delegate.CreateDelegate(typeof(Action), instance, method) as Action, instance);
                         break;
                     case "CreateControlConnection":
-                        Sequence_CreateControlConnection.Add(sequence, Delegate.CreateDelegate(typeof(Func<bool>), instance, method) as Func<bool>, new Pair<CNMAttrAndOr.options, ModularCommNetVessel>(andOrList[method], instance));
+                        Sequence_CreateControlConnection.Add(sequence, Delegate.CreateDelegate(typeof(Func<bool>), instance, method) as Func<bool>, new Pair<CNMAttrAndOr.options, ModularCommNetVesselComponent>(andOrList[method], instance));
                         break;
                     case "GetBestTransmitter":
                         Sequence_GetBestTransmitter.Add(sequence, Delegate.CreateDelegate(typeof(Func<IScienceDataTransmitter>), instance, method) as Func<IScienceDataTransmitter>, instance);

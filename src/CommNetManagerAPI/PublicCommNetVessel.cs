@@ -15,62 +15,62 @@ namespace CommNetManagerAPI
         /// Update
         /// </summary>
         /// <param name="callingInstance">The calling instance.</param>
-        void Update(ModularCommNetVessel callingInstance);
+        void Update(ModularCommNetVesselComponent callingInstance);
         /// <summary>
         /// Called when network initialized.
         /// </summary>
         /// <param name="callingInstance">The calling instance.</param>
-        void OnNetworkInitialized(ModularCommNetVessel callingInstance);
+        void OnNetworkInitialized(ModularCommNetVesselComponent callingInstance);
         /// <summary>
         /// Called when network pre update.
         /// </summary>
         /// <param name="callingInstance">The calling instance.</param>
-        void OnNetworkPreUpdate(ModularCommNetVessel callingInstance);
+        void OnNetworkPreUpdate(ModularCommNetVesselComponent callingInstance);
         /// <summary>
         /// Called when network post update.
         /// </summary>
         /// <param name="callingInstance">The calling instance.</param>
-        void OnNetworkPostUpdate(ModularCommNetVessel callingInstance);
+        void OnNetworkPostUpdate(ModularCommNetVesselComponent callingInstance);
         /// <summary>
         /// Calculates the plasma mult.
         /// </summary>
         /// <param name="callingInstance">The calling instance.</param>
-        void CalculatePlasmaMult(ModularCommNetVessel callingInstance);
+        void CalculatePlasmaMult(ModularCommNetVesselComponent callingInstance);
         /// <summary>
         /// Updates the Comm field.
         /// </summary>
         /// <param name="callingInstance">The calling instance.</param>
-        void UpdateComm(ModularCommNetVessel callingInstance);
+        void UpdateComm(ModularCommNetVesselComponent callingInstance);
         /// <summary>
         /// Creates the control connection.
         /// </summary>
         /// <param name="callingInstance">The calling instance.</param>
         /// <returns></returns>
-        bool CreateControlConnection(ModularCommNetVessel callingInstance);
+        bool CreateControlConnection(ModularCommNetVesselComponent callingInstance);
         /// <summary>
         /// Gets the best transmitter.
         /// </summary>
         /// <param name="callingInstance">The calling instance.</param>
         /// <returns></returns>
-        IScienceDataTransmitter GetBestTransmitter(ModularCommNetVessel callingInstance);
+        IScienceDataTransmitter GetBestTransmitter(ModularCommNetVesselComponent callingInstance);
         /// <summary>
         /// Gets the control level.
         /// </summary>
         /// <param name="callingInstance">The calling instance.</param>
         /// <returns></returns>
-        Vessel.ControlLevel GetControlLevel(ModularCommNetVessel callingInstance);
+        Vessel.ControlLevel GetControlLevel(ModularCommNetVesselComponent callingInstance);
         /// <summary>
         /// Called when map focus changes.
         /// </summary>
         /// <param name="callingInstance">The calling instance.</param>
         /// <param name="target">The target.</param>
-        void OnMapFocusChange(ModularCommNetVessel callingInstance, MapObject target);
+        void OnMapFocusChange(ModularCommNetVesselComponent callingInstance, MapObject target);
         /// <summary>
         /// Gets the signal strength modifier.
         /// </summary>
         /// <param name="callingInstance">The calling instance.</param>
         /// <param name="b">The other node.</param>
         /// <returns></returns>
-        double GetSignalStrengthModifier(ModularCommNetVessel callingInstance, CommNode b);
+        double GetSignalStrengthModifier(ModularCommNetVesselComponent callingInstance, CommNode b);
     }
 }

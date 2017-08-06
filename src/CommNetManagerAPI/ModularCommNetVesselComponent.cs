@@ -9,7 +9,7 @@ namespace CommNetManagerAPI
     /// <summary>
     /// Derive from this class for CommNetManager to incorporate the methods into the VesselModule.
     /// </summary>
-    public class ModularCommNetVessel : UnityEngine.MonoBehaviour
+    public class ModularCommNetVesselComponent : UnityEngine.MonoBehaviour
     {
         /// <summary>
         /// Per KSP VesselModule
@@ -22,7 +22,7 @@ namespace CommNetManagerAPI
         /// <summary>
         /// The CommNetVessel module to which this instance is attached.
         /// </summary>
-        public ModularCommNetVesselModule CommNetVessel
+        public ModularCommNetVessel CommNetVessel
         {
             get { return _CommNetVessel; }
             protected internal set
@@ -32,7 +32,7 @@ namespace CommNetManagerAPI
                 this.vessel = value.Vessel;
             }
         }
-        private ModularCommNetVesselModule _CommNetVessel;
+        private ModularCommNetVessel _CommNetVessel;
         /// <summary>
         /// The CommNetVessel module to which this instance is attached. Used for interface method calls.
         /// </summary>
@@ -42,17 +42,17 @@ namespace CommNetManagerAPI
             private set;
         }
         /// <summary>
-        /// Initializes a new instance of the <see cref="ModularCommNetVessel"/> class.
+        /// Initializes a new instance of the <see cref="ModularCommNetVesselComponent"/> class.
         /// </summary>
         /// <param name="actualCommNetVessel">The CommNetVessel to which this instance is attached.</param>
-        public ModularCommNetVessel(ModularCommNetVesselModule actualCommNetVessel)
+        public ModularCommNetVesselComponent(ModularCommNetVessel actualCommNetVessel)
         {
             this.CommNetVessel = actualCommNetVessel;
         }
         /// <summary>
-        /// Initializes a new instance of the <see cref="ModularCommNetVessel"/> class.
+        /// Initializes a new instance of the <see cref="ModularCommNetVesselComponent"/> class.
         /// </summary>
-        protected ModularCommNetVessel()
+        protected ModularCommNetVesselComponent()
         {
         }
 
