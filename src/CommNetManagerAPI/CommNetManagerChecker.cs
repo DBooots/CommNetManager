@@ -124,7 +124,7 @@ namespace CommNetManagerAPI
             }
             else
             {
-                if (typeof(CommNetNetwork).IsAssignableFrom(derivativeOfCommNetNetwork))
+                if (!typeof(CommNetNetwork).IsAssignableFrom(derivativeOfCommNetNetwork))
                 {
                     UnityEngine.Debug.LogError("The supplied Type in SetCommNetManagerIfAvailable is not a derivative of CommNetNetwork.");
                     return false;

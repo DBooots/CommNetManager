@@ -53,9 +53,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AssemblyChecker.cs" />
+    <Compile Include="CNMBody.cs" />
+    <Compile Include="CNMHome.cs" />
     <Compile Include="CommNetExtensions.cs" />
     <Compile Include="CommNetManagerAttributes.cs" />
     <Compile Include="CommNetManagerChecker.cs" />
+    <Compile Include="Logger.cs" />
     <Compile Include="ModularCommNetVesselComponent.cs" />
     <Compile Include="ModularCommNetVessel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

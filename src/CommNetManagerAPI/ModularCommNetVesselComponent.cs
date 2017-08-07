@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using CommNet;
+﻿using CommNet;
 
 namespace CommNetManagerAPI
 {
     /// <summary>
     /// Derive from this class for CommNetManager to incorporate the methods into the VesselModule.
     /// </summary>
+    /// <seealso cref="UnityEngine.MonoBehaviour" />
     public class ModularCommNetVesselComponent : UnityEngine.MonoBehaviour
     {
         /// <summary>

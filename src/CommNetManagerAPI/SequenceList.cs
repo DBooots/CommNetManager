@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace CommNetManagerAPI
 {
@@ -131,7 +129,7 @@ namespace CommNetManagerAPI
                     case 1: return this.Late;
                     case 2: return this.Post;
                     default:
-                        UnityEngine.Debug.LogError("CommNetManager: The provided int was out of range.");
+                        UnityEngine.Debug.LogError("SequenceList: The provided int was out of range.");
                         return null;
                 }
             }

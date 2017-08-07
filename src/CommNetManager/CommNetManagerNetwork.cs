@@ -10,6 +10,7 @@ namespace CommNetManager
 {
     public class CommNetManagerNetwork : CommNetwork, PublicCommNet
     {
+        static Logger log = new Logger("CommNetManagerNetwork:");
         public static CommNetwork Instance { get; protected set; } = null;
         internal protected static Dictionary<CommNode, Vessel> commNodesVessels = new Dictionary<CommNode, Vessel>();
 
@@ -66,10 +67,10 @@ namespace CommNetManager
 
             foreach (Type type in networkTypes)
             {
-                Debug.Log("CommNetManager: Found a CommNetwork type: " + type.Name);
+                log.info("Found a CommNetwork type: " + type.Name);
                 if (type == typeof(CommNetwork) || type == typeof(CommNetManagerNetwork))
                 {
-                    Debug.Log("CommNetManager: Skipping type " + type.Name);
+                    log.info("Skipping type " + type.Name);
                     continue;
                 }
 
@@ -119,7 +120,7 @@ namespace CommNetManager
         public CommNetManagerNetwork()
         {
             if (Instance != null)
-                Debug.LogWarning("CommNetManager: CommNetManagerNetwork.Instance was not null.");
+                log.warning("CommNetManagerNetwork.Instance was not null.");
             Instance = this;
 
             commNetworks.Clear();
@@ -149,12 +150,12 @@ namespace CommNetManager
             {
                 CommNetManagerNetwork.Initiate();
             }
-            Debug.Log("CommNetManager: " + networkTypes.Count);
+            log.debug(networkTypes.Count);
             foreach (Type type in networkTypes)
             {
                 if (type == typeof(CommNetwork) || type == typeof(CommNetManagerNetwork))
                 {
-                    Debug.Log("CommNetManager: Skipping type " + type.Name);
+                    log.debug("Skipping type " + type.Name);
                     continue;
                 }
                 CommNetwork typeNetworkInstance = null;
@@ -164,16 +165,16 @@ namespace CommNetManager
                 }
                 catch(Exception ex)
                 {
-                    Debug.LogError("CommNetManager: Encountered an exception while calling the constructor for " + type.Name);
-                    Debug.LogError(ex);
+                    log.error("Encountered an exception while calling the constructor for " + type.Name);
+                    log.error(ex);
                 }
                 if (typeNetworkInstance != null)
                 {
                     commNetworks.Add(type, typeNetworkInstance);
-                    Debug.Log("CommNetManager: Activated an instance of type: " + type.Name);
+                    log.info("Activated an instance of type: " + type.Name);
                 }
                 else
-                    Debug.LogWarning("CommNetManager: Failed to activate " + type.Name);
+                    log.warning("Failed to activate " + type.Name);
             }
             foreach (SequenceList<MethodInfo> methodList in methodsSequence.Values)
             {
@@ -181,7 +182,7 @@ namespace CommNetManager
                 {
                     if (!commNetworks.ContainsKey(methodTypes[method]))
                     {
-                        Debug.LogWarning("CommNetManager: No instance of the CommNetwork type (" + methodTypes[method].DeclaringType.FullName.ToString()+") was instantiated.");
+                        log.warning("No instance of the CommNetwork type (" + methodTypes[method].DeclaringType.FullName.ToString()+") was instantiated.");
                         continue;
                     }
                     ParseDelegates(method.Name, method, CNMAttrSequence.options.EARLY);
@@ -190,7 +191,7 @@ namespace CommNetManager
                 {
                     if (!commNetworks.ContainsKey(methodTypes[method]))
                     {
-                        Debug.LogWarning("CommNetManager: No instance of the CommNetwork type (" + methodTypes[method].DeclaringType.FullName.ToString() + ") was instantiated.");
+                        log.warning("No instance of the CommNetwork type (" + methodTypes[method].DeclaringType.FullName.ToString() + ") was instantiated.");
                         continue;
                     }
                     ParseDelegates(method.Name, method, CNMAttrSequence.options.LATE);
@@ -199,7 +200,7 @@ namespace CommNetManager
                 {
                     if (!commNetworks.ContainsKey(methodTypes[method]))
                     {
-                        Debug.LogWarning("CommNetManager: No instance of the CommNetwork type (" + methodTypes[method].DeclaringType.FullName.ToString() + ") was instantiated.");
+                        log.warning("No instance of the CommNetwork type (" + methodTypes[method].DeclaringType.FullName.ToString() + ") was instantiated.");
                         continue;
                     }
                     ParseDelegates(method.Name, method, CNMAttrSequence.options.POST);
@@ -210,12 +211,12 @@ namespace CommNetManager
         private void ParseDelegates(string methodName, MethodInfo method, CNMAttrSequence.options sequence)
         {
             CommNetwork networkInstance = commNetworks[methodTypes[method]];
-
+    #if DEBUG
             if (andOrList.ContainsKey(method))
                 Debug.LogFormat("CommNetManager: Parsing {0} from {1} as {2} with {3}.", methodName, networkInstance.GetType().Name, sequence, andOrList[method]);
             else
                 Debug.LogFormat("CommNetManager: Parsing {0} from {1} as {2}.", methodName, networkInstance.GetType().Name, sequence);
-
+    #endif
             try
             {
                 switch (methodName)
@@ -284,15 +285,17 @@ namespace CommNetManager
                         Sequence_UpdateShortestWhere.Add(sequence, Delegate.CreateDelegate(typeof(Func<CommNode, CommNode, CommLink, double, CommNode, Func<CommNode, CommNode, bool>, CommNode>), networkInstance, method) as Func<CommNode, CommNode, CommLink, double, CommNode, Func<CommNode, CommNode, bool>, CommNode>);
                         break;
                     default:
-                        Debug.LogWarning("CommNetManager: The method passed (" + methodName + ") was not a standard CommNet method.");
+    #if DEBUG
+                        log.warning("The method passed (" + methodName + ") was not a standard CommNet method.");
+    #endif
                         return;
                 }
-                Debug.Log("CommNetManager: Successfully parsed " + methodName + " from type " + networkInstance.GetType().Name);
+                log.debug("Successfully parsed " + methodName + " from type " + networkInstance.GetType().Name);
             }
             catch(Exception ex)
             {
-                Debug.LogError("CommNetManager: Encountered an error creating a delegate for " + methodName + " from type " + networkInstance.GetType().Name);
-                Debug.LogError(ex);
+                log.error("Encountered an error creating a delegate for " + methodName + " from type " + networkInstance.GetType().Name);
+                log.error(ex);
             }
         }
 
@@ -324,7 +327,7 @@ namespace CommNetManager
                 case CNMAttrAndOr.options.AND: return a & b;
                 case CNMAttrAndOr.options.OR: return a | b;
                 default:
-                    Debug.LogError("You should never see this error.");
+                    log.error("You should never see this error.");
                     return false;
             }
         }

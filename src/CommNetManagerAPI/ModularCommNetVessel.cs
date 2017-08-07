@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using CommNet;
 using UnityEngine;
 using System.Reflection;
@@ -15,19 +14,19 @@ namespace CommNetManagerAPI
     /// <seealso cref="CommNetManagerAPI.PublicCommNetVessel" />
     public sealed class ModularCommNetVessel : CommNetVessel, PublicCommNetVessel
     {
+        Logger log = new Logger("ModularCommNetVessel:");
         private static Assembly electionWinner = null;
         private static Dictionary<MethodInfo, Type> methodTypes = new Dictionary<MethodInfo, Type>();
         private Dictionary<Type, ModularCommNetVesselComponent> modularRefs = new Dictionary<Type, ModularCommNetVesselComponent>();
         private static Dictionary<string, SequenceList<MethodInfo>> methodsSequence = new Dictionary<string, SequenceList<MethodInfo>>();
         private static Dictionary<MethodInfo, CNMAttrAndOr.options> andOrList = new Dictionary<MethodInfo, CNMAttrAndOr.options>();
         private static bool methodsLoaded = false;
-        private Dictionary<Delegate, CNMAttrAndOr.options> invokesAndOr = new Dictionary<Delegate, CNMAttrAndOr.options>();
 
         private static List<Type> modularTypes = null;
         /// <summary>
-        /// The modular CommNetVessels implemented in this type.
+        /// The modular CommNetVesselComponents implemented in this type.
         /// </summary>
-        public List<ModularCommNetVesselComponent> ModularCommNetVessels { get; internal set; } = null;
+        public List<ModularCommNetVesselComponent> Components { get; internal set; } = null;
 
         #region SequenceList<Delegate> for each inherited method
 
@@ -102,7 +101,7 @@ namespace CommNetManagerAPI
             }
             if (this.vessel == null)
             {
-                Debug.LogWarning("OnAwake: Vessel is null.");
+                log.warning("OnAwake: Vessel is null.");
                 return;
             }
             this.InstantiateModularTypes();
@@ -123,8 +122,8 @@ namespace CommNetManagerAPI
         /// </summary>
         protected override void OnStart()
         {
-            Debug.Log("OnStart: " + this.vessel != null ? this.vessel.name : "");
-            if (this.ModularCommNetVessels == null)
+            log.debug("OnStart: " + this.vessel != null ? this.vessel.name : "");
+            if (this.Components == null)
                 this.InstantiateModularTypes();
             for (int i = 0; i < Sequence_OnStart.EarlyLate.Count; i++)
             {
@@ -143,9 +142,9 @@ namespace CommNetManagerAPI
         /// </summary>
         protected override void OnDestroy()
         {
-            foreach (ModularCommNetVesselComponent module in this.modularRefs.Values)
+            for (int i = this.Components.Count - 1; i >= 0; i--)
             {
-                Destroy(module);
+                Destroy(Components[i]);
             }
             base.OnDestroy();
         }
@@ -288,7 +287,7 @@ namespace CommNetManagerAPI
         /// <summary>
         /// Called when network initialized.
         /// </summary>
-        public void OnNetworkInitialized()
+        protected override void OnNetworkInitialized()
         {
             for (int i = 0; i < Sequence_OnNetworkInitialized.EarlyLate.Count; i++)
             {
@@ -306,7 +305,7 @@ namespace CommNetManagerAPI
         /// <summary>
         /// Called when network pre update.
         /// </summary>
-        public void OnNetworkPreUpdate()
+        public override void OnNetworkPreUpdate()
         {
             for (int i = 0; i < Sequence_OnNetworkPreUpdate.EarlyLate.Count; i++)
             {
@@ -324,7 +323,7 @@ namespace CommNetManagerAPI
         /// <summary>
         /// Called when network post update.
         /// </summary>
-        public void OnNetworkPostUpdate()
+        public override void OnNetworkPostUpdate()
         {
             for (int i = 0; i < Sequence_OnNetworkPostUpdate.EarlyLate.Count; i++)
             {
@@ -466,7 +465,7 @@ namespace CommNetManagerAPI
         /// Called when map focus changes.
         /// </summary>
         /// <param name="target">The target.</param>
-        public void OnMapFocusChange(MapObject target)
+        protected override void OnMapFocusChange(MapObject target)
         {
             for (int i = 0; i < Sequence_OnMapFocusChange.EarlyLate.Count; i++)
             {
@@ -580,7 +579,7 @@ namespace CommNetManagerAPI
         {
             LoadModularTypes();
             modularRefs.Clear();
-            this.ModularCommNetVessels = new List<ModularCommNetVesselComponent>();
+            this.Components = new List<ModularCommNetVesselComponent>();
             Sequence_Awake.Clear();
             Sequence_OnAwake.Clear();
             Sequence_OnStart.Clear();
@@ -601,12 +600,12 @@ namespace CommNetManagerAPI
             Sequence_OnMapFocusChange.Clear();
             Sequence_GetSignalStrengthModifier.Clear();
 
-            Debug.Log("CNMAPI: ModularVessel: Instantiate " + modularTypes.Count);
+            log.debug("Instantiate " + modularTypes.Count);
             foreach (Type type in modularTypes)
             {
                 if (type == typeof(ModularCommNetVesselComponent))
                 {
-                    Debug.Log("CommNetManager: Skipping type " + type.Name);
+                    log.debug("Skipping type " + type.Name);
                     continue;
                 }
                 ModularCommNetVesselComponent modularCommNetVesselInstance = null;
@@ -624,17 +623,17 @@ namespace CommNetManagerAPI
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogError("CommNetManager: Encountered an exception while calling the constructor for " + type.Name);
-                    Debug.LogError(ex);
+                    log.error("Encountered an exception while calling the constructor for " + type.Name);
+                    log.error(ex);
                 }
                 if (modularCommNetVesselInstance != null)
                 {
-                    ModularCommNetVessels.Add(modularCommNetVesselInstance);
+                    Components.Add(modularCommNetVesselInstance);
                     modularRefs.Add(type, modularCommNetVesselInstance);
-                    Debug.Log("CommNetManager: Activated an instance of type: " + type.Name);
+                    log.debug("Activated an instance of type: " + type.Name);
                 }
                 else
-                    Debug.LogWarning("CommNetManager: Failed to activate " + type.Name);
+                    log.warning("Failed to activate " + type.Name);
             }
             foreach (SequenceList<MethodInfo> methodList in methodsSequence.Values)
             {
@@ -642,7 +641,7 @@ namespace CommNetManagerAPI
                 {
                     if (!modularRefs.ContainsKey(methodTypes[method]))
                     {
-                        Debug.LogWarning("CommNetManager: No instance of the CommNetwork type (" + methodTypes[method].DeclaringType.FullName.ToString() + ") was instantiated.");
+                        log.warning("No instance of the CommNetwork type (" + methodTypes[method].DeclaringType.FullName.ToString() + ") was instantiated.");
                         continue;
                     }
                     ParseDelegates(method.Name, method, CNMAttrSequence.options.EARLY);
@@ -651,7 +650,7 @@ namespace CommNetManagerAPI
                 {
                     if (!modularRefs.ContainsKey(methodTypes[method]))
                     {
-                        Debug.LogWarning("CommNetManager: No instance of the CommNetwork type (" + methodTypes[method].DeclaringType.FullName.ToString() + ") was instantiated.");
+                        log.warning("No instance of the CommNetwork type (" + methodTypes[method].DeclaringType.FullName.ToString() + ") was instantiated.");
                         continue;
                     }
                     ParseDelegates(method.Name, method, CNMAttrSequence.options.LATE);
@@ -660,7 +659,7 @@ namespace CommNetManagerAPI
                 {
                     if (!modularRefs.ContainsKey(methodTypes[method]))
                     {
-                        Debug.LogWarning("CommNetManager: No instance of the CommNetwork type (" + methodTypes[method].DeclaringType.FullName.ToString() + ") was instantiated.");
+                        log.warning("No instance of the CommNetwork type (" + methodTypes[method].DeclaringType.FullName.ToString() + ") was instantiated.");
                         continue;
                     }
                     ParseDelegates(method.Name, method, CNMAttrSequence.options.POST);
@@ -671,10 +670,12 @@ namespace CommNetManagerAPI
         {
             ModularCommNetVesselComponent instance = modularRefs[methodTypes[method]];
 
+    #if DEBUG
             if (andOrList.ContainsKey(method))
-                Debug.LogFormat("CommNetManager: Parsing {0} from {1} as {2} with {3}.", methodName, instance.GetType().Name, sequence, andOrList[method]);
+                Debug.LogFormat("ModularCommNetVessel: Parsing {0} from {1} as {2} with {3}.", methodName, instance.GetType().Name, sequence, andOrList[method]);
             else
-                Debug.LogFormat("CommNetManager: Parsing {0} from {1} as {2}.", methodName, instance.GetType().Name, sequence);
+                Debug.LogFormat("ModularCommNetVessel: Parsing {0} from {1} as {2}.", methodName, instance.GetType().Name, sequence);
+    #endif
 
             try
             {
@@ -738,15 +739,17 @@ namespace CommNetManagerAPI
                         Sequence_GetSignalStrengthModifier.Add(sequence, Delegate.CreateDelegate(typeof(Func<CommNode, double>), instance, method) as Func<CommNode, double>, instance);
                         break;
                     default:
-                        Debug.LogWarning("CommNetManager: The method passed (" + methodName + ") was not a standard CommNet method.");
+    #if DEBUG
+                        log.warning("The method passed (" + methodName + ") was not a standard CommNet method.");
+    #endif
                         return;
                 }
-                Debug.Log("CommNetManager: Successfully parsed " + methodName + " from type " + instance.GetType().Name);
+                log.debug("Successfully parsed " + methodName + " from type " + instance.GetType().Name);
             }
             catch (Exception ex)
             {
-                Debug.LogError("CommNetManager: Encountered an error creating a delegate for " + methodName + " from type " + instance.GetType().Name);
-                Debug.LogError(ex);
+                log.error("Encountered an error creating a delegate for " + methodName + " from type " + instance.GetType().Name);
+                log.error(ex);
             }
         }
 
@@ -769,7 +772,7 @@ namespace CommNetManagerAPI
             if (eligible.First().assembly != currentAssembly)
             {
                 //loaded = true;
-                UnityEngine.Debug.Log("CNMAPI: version " + currentAssembly.GetName().Version + " at " + currentAssembly.Location +
+                log.info("CNMAPI: version " + currentAssembly.GetName().Version + " at " + currentAssembly.Location +
                     " lost the election");
                 DestroyImmediate(this);
                 Destroy(this);
@@ -783,7 +786,7 @@ namespace CommNetManagerAPI
             }
             if (candidates.Length >= 0) // TODO: Not publish for zeroes.
             {
-                UnityEngine.Debug.Log("CNMAPI: version " + currentAssembly.GetName().Version + " at " + currentAssembly.Location +
+                log.info("CNMAPI: version " + currentAssembly.GetName().Version + " at " + currentAssembly.Location +
                     " won the election against\n" + candidates);
             }
 
