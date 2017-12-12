@@ -15,25 +15,34 @@ namespace CommNetManagerAPI
         /// <summary>
         /// Per KSP VesselModule
         /// </summary>
-        public Vessel Vessel { get { return this.vessel; } }
+        public Vessel Vessel { get { return this.vessel; } protected set { vessel = value; } }
         /// <summary>
-        /// The CommNetVessel module to which this instance is attached.
+        /// The <see cref="CommNetVessel"/> module to which this instance is attached.
         /// </summary>
-        public ModularCommNetVessel CommNetVessel
+        public CommNetVessel CommNetVessel
         {
             get { return _CommNetVessel; }
-            protected internal set
+            set
             {
                 _CommNetVessel = value;
-                CommNetVesselAsPublic = value;
-                this.vessel = value.Vessel;
+                CommNetVesselAsPublic = value as IPublicCommNetVessel;
+                CommNetVesselAsModular = value as IModularCommNetVessel;
+                this.Vessel = value.Vessel;
             }
         }
-        private ModularCommNetVessel _CommNetVessel;
+        private CommNetVessel _CommNetVessel;
         /// <summary>
-        /// The CommNetVessel module to which this instance is attached. Used for interface method calls.
+        /// The <see cref="CommNetVessel"/> module to which this instance is attached. Used for interface method calls.
         /// </summary>
-        public PublicCommNetVessel CommNetVesselAsPublic
+        public IPublicCommNetVessel CommNetVesselAsPublic
+        {
+            get;
+            private set;
+        }
+        /// <summary>
+        /// The <see cref="CommNetVessel"/> module to which this instance is attached. Used for interface method calls.
+        /// </summary>
+        public IModularCommNetVessel CommNetVesselAsModular
         {
             get;
             private set;
@@ -42,7 +51,7 @@ namespace CommNetManagerAPI
         /// Initializes a new instance of the <see cref="ModularCommNetVesselComponent"/> class.
         /// </summary>
         /// <param name="actualCommNetVessel">The CommNetVessel to which this instance is attached.</param>
-        public ModularCommNetVesselComponent(ModularCommNetVessel actualCommNetVessel)
+        public ModularCommNetVesselComponent(CommNetVessel actualCommNetVessel)
         {
             this.CommNetVessel = actualCommNetVessel;
         }

@@ -58,10 +58,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CNMBody.cs" />
+    <Compile Include="CNMHome.cs" />
     <Compile Include="CommNetManager.cs" />
     <Compile Include="CommNetManagerEvents.cs" />
     <Compile Include="CommNetManagerNetwork.cs" />
     <Compile Include="Logger.cs" />
+    <Compile Include="ModularCommNetVessel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

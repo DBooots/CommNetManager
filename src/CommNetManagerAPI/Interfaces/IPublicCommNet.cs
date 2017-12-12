@@ -8,7 +8,7 @@ namespace CommNetManagerAPI
     /// Public implementation of many protected methods. Cast a CommNetManager instance to this interface to call these methods.
     /// <para />USE WITH CAUTION.
     /// </summary>
-    public interface PublicCommNet
+    public interface IPublicCommNet
     {
         /// <summary>
         /// Gets the instance of CommNetManagerNetwork.

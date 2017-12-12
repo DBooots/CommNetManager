@@ -3,10 +3,15 @@
 namespace CommNetManagerAPI
 {
     /// <summary>
-    /// A version of CommNetVessel with certain methods exposed.
+    /// A version of <see cref="CommNetVessel"/>  with certain methods exposed.
     /// </summary>
-    public interface PublicCommNetVessel
+    public interface IPublicCommNetVessel
     {
+        /// <summary>
+        /// Per KSP docs.
+        /// </summary>
+        CommNet.CommNode Comm { get; set; }
+
         /// <summary>
         /// Update
         /// </summary>

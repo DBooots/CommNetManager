@@ -4,14 +4,15 @@ using System.Linq;
 using CommNet;
 using System.Reflection;
 using UnityEngine;
+using CommNetManagerAPI;
 
-namespace CommNetManagerAPI
+namespace CommNetManager
 {
     /// <summary>
     /// CommNetManager's implementation of <see cref="CommNetBody"/>.
     /// </summary>
     /// <seealso cref="CommNet.CommNetBody" />
-    public sealed class CNMBody : CommNetBody
+    public sealed class CNMBody : CommNetBody , ICNMBody
     {
         Logger log = new Logger("CNMBody:");
         private SequenceList<Func<Occluder>> Sequence_CreateOccluder = new SequenceList<Func<Occluder>>();
@@ -19,7 +20,7 @@ namespace CommNetManagerAPI
         private SequenceList<Action> Sequence_OnNetworkPreUpdate = new SequenceList<Action>();
         private SequenceList<Action> Sequence_Start = new SequenceList<Action>();
         /// <summary>
-        /// The modular CNMBodyComponents implemented in this type.
+        /// The modular <see cref="CNMBodyComponent"/>s implemented in this type.
         /// </summary>
         public List<CNMBodyComponent> Components { get; internal set; } = new List<CNMBodyComponent>();
         private static Dictionary<MethodInfo, Type> methodTypes = new Dictionary<MethodInfo, Type>();
@@ -58,7 +59,7 @@ namespace CommNetManagerAPI
             this.InstantiateModularTypes();
         }
         /// <summary>
-        /// Gets the CNMBodyComponent instance of the specified type.
+        /// Gets the <see cref="CNMBodyComponent"/>  instance of the specified type.
         /// </summary>
         /// <typeparam name="T">The type to get.</typeparam>
         /// <returns></returns>
@@ -70,7 +71,7 @@ namespace CommNetManagerAPI
             return (T)value;
         }
         /// <summary>
-        /// Gets the CNMBodyComponent instance of the specified type.
+        /// Gets the <see cref="CNMBodyComponent"/>  instance of the specified type.
         /// </summary>
         /// <param name="type">The type to get.</param>
         /// <returns></returns>
@@ -224,25 +225,7 @@ namespace CommNetManagerAPI
                     log.debug("Skipping type " + type.Name);
                     continue;
                 }
-                CNMBodyComponent modularCommNetVesselInstance = null;
-                try
-                {
-                    modularCommNetVesselInstance = gameObject.AddComponent(type) as CNMBodyComponent;
-                    modularCommNetVesselInstance.Initialize(this);
-                }
-                catch (Exception ex)
-                {
-                    log.error("Encountered an exception while calling the constructor for " + type.Name);
-                    log.error(ex);
-                }
-                if (modularCommNetVesselInstance != null)
-                {
-                    Components.Add(modularCommNetVesselInstance);
-                    modularRefs.Add(type, modularCommNetVesselInstance);
-                    log.debug("Activated an instance of type: " + type.Name);
-                }
-                else
-                    log.error("Failed to activate " + type.Name);
+                AttachComponent(type);
             }
             foreach (SequenceList<MethodInfo> methodList in methodsSequence.Values)
             {
@@ -275,6 +258,37 @@ namespace CommNetManagerAPI
                 }
             }
         }
+
+        /// <summary>
+        /// Attaches a <see cref="CNMBodyComponent"/>.
+        /// </summary>
+        /// <param name="componentType">Type of the component.</param>
+        /// <returns><c>true</c> if successful.</returns>
+        public bool AttachComponent(Type componentType)
+        {
+            CNMBodyComponent modularCommNetBodyInstance = null;
+            try
+            {
+                modularCommNetBodyInstance = gameObject.AddComponent(componentType) as CNMBodyComponent;
+                modularCommNetBodyInstance.Initialize(this);
+            }
+            catch (Exception ex)
+            {
+                log.error("Encountered an exception while calling the constructor for " + componentType.Name);
+                log.error(ex);
+            }
+            if (modularCommNetBodyInstance != null)
+            {
+                Components.Add(modularCommNetBodyInstance);
+                modularRefs.Add(componentType, modularCommNetBodyInstance);
+                log.debug("Activated an instance of type: " + componentType.Name);
+                return true;
+            }
+            else
+                log.error("Failed to activate " + componentType.Name);
+            return false;
+        }
+
         private void ParseDelegates(string methodName, MethodInfo method, CNMAttrSequence.options sequence)
         {
             CNMBodyComponent instance = modularRefs[methodTypes[method]];
@@ -312,46 +326,5 @@ namespace CommNetManagerAPI
                 log.error(ex);
             }
         }
-    }
-
-    /// <summary>
-    /// Derive from this class for CommNetManager to incorporate the methods into the CommNetBody.
-    /// </summary>
-    /// <seealso cref="UnityEngine.MonoBehaviour" />
-    public class CNMBodyComponent : UnityEngine.MonoBehaviour
-    {
-        /// <summary>
-        /// The CommNetBody to which this component is attached.
-        /// </summary>
-        public CNMBody CommNetBody
-        {
-            get; protected internal set;
-        }
-        /// <summary>
-        /// Initializes the <see cref="CNMBodyComponent"/>.
-        /// <para/> CAUTION: If overriding, you must call base.Initialize(body). 
-        /// </summary>
-        /// <param name="body">The linked CommNetBody.</param>
-        public virtual void Initialize(CNMBody body)
-        {
-            this.CommNetBody = body;
-        }
-        /*/// <summary>
-        /// Creates the occluder.
-        /// </summary>
-        /// <returns></returns>
-        protected virtual Occluder CreateOccluder() { return null; }*/
-        /// <summary>
-        /// Called when network initialized.
-        /// </summary>
-        protected virtual void OnNetworkInitialized() { }
-        /// <summary>
-        /// Called when network pre update.
-        /// </summary>
-        public virtual void OnNetworkPreUpdate() { }
-        /// <summary>
-        /// Start
-        /// </summary>
-        protected virtual void Start() { }
     }
 }

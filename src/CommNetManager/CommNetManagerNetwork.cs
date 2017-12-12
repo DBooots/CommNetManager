@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace CommNetManager
 {
-    public class CommNetManagerNetwork : CommNetwork, PublicCommNet
+    public class CommNetManagerNetwork : CommNetwork, IPublicCommNet
     {
         static Logger log = new Logger("CommNetManagerNetwork:");
         public static CommNetwork Instance { get; protected set; } = null;
@@ -905,54 +905,54 @@ namespace CommNetManager
 
         #region PublicCommNet
 
-        bool PublicCommNet.SetNodeConnection(CommNode a, CommNode b) { return this.SetNodeConnection(a, b); }
+        bool IPublicCommNet.SetNodeConnection(CommNode a, CommNode b) { return this.SetNodeConnection(a, b); }
 
-        CommNode PublicCommNet.Add(CommNode conn) { return this.Add(conn); }
+        CommNode IPublicCommNet.Add(CommNode conn) { return this.Add(conn); }
 
-        Occluder PublicCommNet.Add(Occluder conn) { return this.Add(conn); }
+        Occluder IPublicCommNet.Add(Occluder conn) { return this.Add(conn); }
 
-        CommLink PublicCommNet.Connect(CommNode a, CommNode b, double distance) { return this.Connect(a, b, distance); }
+        CommLink IPublicCommNet.Connect(CommNode a, CommNode b, double distance) { return this.Connect(a, b, distance); }
 
-        void PublicCommNet.CreateShortestPathTree(CommNode start, CommNode end) { this.CreateShortestPathTree(start, end); }
+        void IPublicCommNet.CreateShortestPathTree(CommNode start, CommNode end) { this.CreateShortestPathTree(start, end); }
 
-        void PublicCommNet.Disconnect(CommNode a, CommNode b, bool removeFromA) { this.Disconnect(a, b, removeFromA); }
+        void IPublicCommNet.Disconnect(CommNode a, CommNode b, bool removeFromA) { this.Disconnect(a, b, removeFromA); }
 
-        bool PublicCommNet.FindClosestControlSource(CommNode from, CommPath path) { return this.FindClosestControlSource(from, path); }
+        bool IPublicCommNet.FindClosestControlSource(CommNode from, CommPath path) { return this.FindClosestControlSource(from, path); }
 
-        CommNode PublicCommNet.FindClosestWhere(CommNode start, CommPath path, Func<CommNode, CommNode, bool> where)
+        CommNode IPublicCommNet.FindClosestWhere(CommNode start, CommPath path, Func<CommNode, CommNode, bool> where)
             { return this.FindClosestWhere(start, path, where); }
 
-        bool PublicCommNet.FindHome(CommNode from, CommPath path) { return this.FindHome(from, path); }
+        bool IPublicCommNet.FindHome(CommNode from, CommPath path) { return this.FindHome(from, path); }
 
-        bool PublicCommNet.FindPath(CommNode start, CommPath path, CommNode end) { return this.FindPath(start, path, end); }
+        bool IPublicCommNet.FindPath(CommNode start, CommPath path, CommNode end) { return this.FindPath(start, path, end); }
 
-        void PublicCommNet.GetLinkPoints(List<Vector3> discreteLines) { this.GetLinkPoints(discreteLines); }
+        void IPublicCommNet.GetLinkPoints(List<Vector3> discreteLines) { this.GetLinkPoints(discreteLines); }
 
-        void PublicCommNet.PostUpdateNodes() { this.PostUpdateNodes(); }
+        void IPublicCommNet.PostUpdateNodes() { this.PostUpdateNodes(); }
 
-        void PublicCommNet.PreUpdateNodes() { this.PreUpdateNodes(); }
+        void IPublicCommNet.PreUpdateNodes() { this.PreUpdateNodes(); }
 
-        void PublicCommNet.Rebuild() { this.Rebuild(); }
+        void IPublicCommNet.Rebuild() { this.Rebuild(); }
 
-        bool PublicCommNet.Remove(CommNode conn) { return this.Remove(conn); }
+        bool IPublicCommNet.Remove(CommNode conn) { return this.Remove(conn); }
 
-        bool PublicCommNet.Remove(Occluder conn) { return this.Remove(conn); }
+        bool IPublicCommNet.Remove(Occluder conn) { return this.Remove(conn); }
 
-        bool PublicCommNet.TestOcclusion(Vector3d aPos, Occluder a, Vector3d bPos, Occluder b, double distance)
+        bool IPublicCommNet.TestOcclusion(Vector3d aPos, Occluder a, Vector3d bPos, Occluder b, double distance)
             { return this.TestOcclusion(aPos, a, bPos, b, distance); }
 
-        bool PublicCommNet.TryConnect(CommNode a, CommNode b, double distance, bool aCanRelay, bool bCanRelay, bool bothRelay)
+        bool IPublicCommNet.TryConnect(CommNode a, CommNode b, double distance, bool aCanRelay, bool bCanRelay, bool bothRelay)
             { return this.TryConnect(a, b, distance, aCanRelay, bCanRelay, bothRelay); }
 
-        void PublicCommNet.UpdateNetwork() { this.UpdateNetwork(); }
+        void IPublicCommNet.UpdateNetwork() { this.UpdateNetwork(); }
 
-        void PublicCommNet.UpdateShortestPath(CommNode a, CommNode b, CommLink link, double bestCost, CommNode startNode, CommNode endNode)
+        void IPublicCommNet.UpdateShortestPath(CommNode a, CommNode b, CommLink link, double bestCost, CommNode startNode, CommNode endNode)
             { this.UpdateShortestPath(a, b, link, bestCost, startNode, endNode); }
 
-        CommNode PublicCommNet.UpdateShortestWhere(CommNode a, CommNode b, CommLink link, double bestCost, CommNode startNode, Func<CommNode, CommNode, bool> whereClause)
+        CommNode IPublicCommNet.UpdateShortestWhere(CommNode a, CommNode b, CommLink link, double bestCost, CommNode startNode, Func<CommNode, CommNode, bool> whereClause)
             { return this.UpdateShortestWhere(a, b, link, bestCost, startNode, whereClause); }
 
-        CommNetwork PublicCommNet.GetInstance() { return Instance; }
+        CommNetwork IPublicCommNet.GetInstance() { return Instance; }
 
         #endregion
 

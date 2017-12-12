@@ -4,15 +4,17 @@ using System.Linq;
 using CommNet;
 using UnityEngine;
 using System.Reflection;
+using CommNetManagerAPI;
 
-namespace CommNetManagerAPI
+namespace CommNetManager
 {
     /// <summary>
     /// The CommNetVessel instance used by CommNetManager
     /// </summary>
     /// <seealso cref="CommNet.CommNetVessel" />
-    /// <seealso cref="CommNetManagerAPI.PublicCommNetVessel" />
-    public sealed class ModularCommNetVessel : CommNetVessel, PublicCommNetVessel
+    /// <seealso cref="CommNetManagerAPI.IPublicCommNetVessel" />
+    /// <seealso cref="CommNetManagerAPI.IModularCommNetVessel" />
+    public sealed class ModularCommNetVessel : CommNetVessel, IPublicCommNetVessel, IModularCommNetVessel
     {
         Logger log = new Logger("ModularCommNetVessel:");
         private static Assembly electionWinner = null;
@@ -24,7 +26,7 @@ namespace CommNetManagerAPI
 
         private static List<Type> modularTypes = null;
         /// <summary>
-        /// The modular CommNetVesselComponents implemented in this type.
+        /// The <see cref="ModularCommNetVesselComponent"/>s implemented in this type.
         /// </summary>
         public List<ModularCommNetVesselComponent> Components { get; internal set; } = null;
 
@@ -63,7 +65,7 @@ namespace CommNetManagerAPI
         #endregion
 
         /// <summary>
-        /// Gets the ModularCommNetVessel instance of the specified type.
+        /// Gets the <see cref="ModularCommNetVesselComponent"/> instance of the specified type.
         /// </summary>
         /// <typeparam name="T">The type to get.</typeparam>
         /// <returns></returns>
@@ -76,7 +78,7 @@ namespace CommNetManagerAPI
             //return this.ModularCommNetVessels.FirstOrDefault(module => module is T);
         }
         /// <summary>
-        /// Gets the ModularCommNetVessel instance of the specified type.
+        /// Gets the <see cref="ModularCommNetVesselComponent"/> instance of the specified type.
         /// </summary>
         /// <param name="type">The type to get.</param>
         /// <returns></returns>
@@ -608,32 +610,7 @@ namespace CommNetManagerAPI
                     log.debug("Skipping type " + type.Name);
                     continue;
                 }
-                ModularCommNetVesselComponent modularCommNetVesselInstance = null;
-                try
-                {
-                    /*if (type.GetConstructor(new Type[] { typeof(ModularCommNetVesselModule) }) != null)
-                        modularCommNetVesselInstance = Activator.CreateInstance(type, new object[] { this }) as ModularCommNetVessel;
-                    else
-                    {
-                        modularCommNetVesselInstance = Activator.CreateInstance(type) as ModularCommNetVessel;
-                    }*/
-                    //modularCommNetVesselInstance = Activator.CreateInstance(type, new object[] { this }) as ModularCommNetVessel;
-                    modularCommNetVesselInstance = gameObject.AddComponent(type) as ModularCommNetVesselComponent;
-                    modularCommNetVesselInstance.CommNetVessel = this;
-                }
-                catch (Exception ex)
-                {
-                    log.error("Encountered an exception while calling the constructor for " + type.Name);
-                    log.error(ex);
-                }
-                if (modularCommNetVesselInstance != null)
-                {
-                    Components.Add(modularCommNetVesselInstance);
-                    modularRefs.Add(type, modularCommNetVesselInstance);
-                    log.debug("Activated an instance of type: " + type.Name);
-                }
-                else
-                    log.warning("Failed to activate " + type.Name);
+                AttachComponent(type);
             }
             foreach (SequenceList<MethodInfo> methodList in methodsSequence.Values)
             {
@@ -666,6 +643,39 @@ namespace CommNetManagerAPI
                 }
             }
         }
+
+        public bool AttachComponent(Type componentType)
+        {
+            ModularCommNetVesselComponent modularCommNetVesselInstance = null;
+            try
+            {
+                /*if (type.GetConstructor(new Type[] { typeof(ModularCommNetVesselModule) }) != null)
+                    modularCommNetVesselInstance = Activator.CreateInstance(type, new object[] { this }) as ModularCommNetVessel;
+                else
+                {
+                    modularCommNetVesselInstance = Activator.CreateInstance(type) as ModularCommNetVessel;
+                }*/
+                //modularCommNetVesselInstance = Activator.CreateInstance(type, new object[] { this }) as ModularCommNetVessel;
+                modularCommNetVesselInstance = gameObject.AddComponent(componentType) as ModularCommNetVesselComponent;
+                modularCommNetVesselInstance.CommNetVessel = this;
+            }
+            catch (Exception ex)
+            {
+                log.error("Encountered an exception while calling the constructor for " + componentType.Name);
+                log.error(ex);
+            }
+            if (modularCommNetVesselInstance != null)
+            {
+                Components.Add(modularCommNetVesselInstance);
+                modularRefs.Add(componentType, modularCommNetVesselInstance);
+                log.debug("Activated an instance of type: " + componentType.Name);
+                return true;
+            }
+            else
+                log.warning("Failed to activate " + componentType.Name);
+            return false;
+        }
+
         private void ParseDelegates(string methodName, MethodInfo method, CNMAttrSequence.options sequence)
         {
             ModularCommNetVesselComponent instance = modularRefs[methodTypes[method]];

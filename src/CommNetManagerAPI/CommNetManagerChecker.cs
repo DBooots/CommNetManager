@@ -16,6 +16,21 @@ namespace CommNetManagerAPI
     public static class CommNetManagerChecker
     {
         /// <summary>
+        /// Gets the current <see cref="CommNet.CommNetNetwork"/> instance.
+        /// </summary>
+        public static CommNetNetwork CommNetNetwork
+        {
+            get
+            {
+                if(_commNetwork == null)
+                {
+                        _commNetwork = CommNetScenario.FindObjectOfType<CommNetNetwork>();
+                }
+                return _commNetwork;
+            }
+        }
+        private static CommNetNetwork _commNetwork = null;
+        /// <summary>
         /// Checks if CommNetManager is installed.
         /// </summary>
         /// <returns>True if CommNetManager is installed.</returns>
@@ -51,22 +66,41 @@ namespace CommNetManagerAPI
         private static bool _CommNetManagerInstalled;
         private static bool CommNetManagerChecked = false;
         private static Type CommNetManager = null;
+        private static System.Reflection.PropertyInfo CommNetManagerInstance_prop = null;
         private static System.Reflection.PropertyInfo CommNetManagerNetwork_prop = null;
         private static System.Reflection.MethodInfo BindTo_method = null;
 
         /// <summary>
-        /// Gets the current instance of the CommNetManagerNetwork.
+        /// Gets the current instance of the CommNetManager. Can be cast to <see cref="ICommNetManager"/>.
         /// </summary>
         /// <returns>Null if CommNetManager is not installed.</returns>
-        public static CommNetwork GetCommNetManagerInstance()
+        public static CommNetNetwork GetCommNetManagerInstance()
         {
             if (CommNetManagerInstalled)
             {
-                if (CommNetManagerNetwork_prop == null)
+                if (CommNetManagerInstance_prop == null)
                 {
-                    CommNetManagerNetwork_prop = CommNetManager.GetProperty("Instance", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
+                    CommNetManagerInstance_prop = CommNetManager.GetProperty("Instance", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
                 }
-                return CommNetManagerNetwork_prop.GetValue(null, null) as CommNetwork;
+                return CommNetManagerInstance_prop.GetValue(null, null) as CommNetNetwork;
+            }
+            else
+                return null;
+        }
+
+        /// <summary>
+        /// Gets the current instance of the CommNetManager. Can be cast to <see cref="ICommNetManager"/>.
+        /// </summary>
+        /// <returns>Null if CommNetManager is not installed.</returns>
+        public static CommNetwork GetCommNetManagerNetwork()
+        {
+            if (CommNetManagerInstalled)
+            {
+                if (CommNetManagerInstance_prop == null)
+                {
+                    CommNetManagerInstance_prop = CommNetManager.GetProperty("CommNet", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+                }
+                return CommNetManagerInstance_prop.GetValue(null, null) as CommNetwork;
             }
             else
                 return null;
@@ -90,7 +124,7 @@ namespace CommNetManagerAPI
         /// </remarks>
         public static bool BindToCommNetManager(CommNetwork bind)
         {
-            CommNetwork CommNetManagerInstance = GetCommNetManagerInstance();
+            CommNetwork CommNetManagerInstance = GetCommNetManagerNetwork();
             if (CommNetManagerInstance == null)
                 return false;
 
@@ -135,12 +169,14 @@ namespace CommNetManagerAPI
             if (!(CustomCommNetNetwork == null))
             {
                 UnityEngine.Object.Destroy(stockNet);
+                _commNetwork = CustomCommNetNetwork;
                 //CommNetNetwork.Instance.GetType().GetMethod("set_Instance").Invoke(CustomCommNetNetwork, null); // reflection to bypass Instance's protected set // don't seem to work
                 return true;
             }
             else
             {
                 CustomCommNetNetwork = stockNet;
+                _commNetwork = stockNet;
                 return false;
             }
         }
@@ -183,12 +219,14 @@ namespace CommNetManagerAPI
             if (!(CustomCommNetNetwork == null))
             {
                 UnityEngine.Object.Destroy(stockNet);
+                _commNetwork = CustomCommNetNetwork;
                 //CommNetNetwork.Instance.GetType().GetMethod("set_Instance").Invoke(CustomCommNetNetwork, null); // reflection to bypass Instance's protected set // don't seem to work
                 return true;
             }
             else
             {
                 CustomCommNetNetwork = stockNet;
+                _commNetwork = stockNet;
                 return false;
             }
         }

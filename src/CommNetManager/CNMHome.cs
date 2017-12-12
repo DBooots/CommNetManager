@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+using CommNetManagerAPI;
 
-namespace CommNetManagerAPI
+namespace CommNetManager
 {
     /// <summary>
     /// CommNetManager's implementation of <see cref="CommNet.CommNetHome"/>.
     /// </summary>
     /// <seealso cref="CommNet.CommNetHome" />
-    public sealed class CNMHome : CommNet.CommNetHome
+    public sealed class CNMHome : CommNet.CommNetHome, ICNMHome
     {
         Logger log = new Logger("CNMHome:");
         private SequenceList<Action> Sequence_CreateNode = new SequenceList<Action>();
@@ -73,7 +74,7 @@ namespace CommNetManagerAPI
         }
 
         /// <summary>
-        /// Gets the CNMHomeComponent instance of the specified type.
+        /// Gets the <see cref="CNMHomeComponent"/>  instance of the specified type.
         /// </summary>
         /// <typeparam name="T">The type to get.</typeparam>
         /// <returns></returns>
@@ -85,7 +86,7 @@ namespace CommNetManagerAPI
             return (T)value;
         }
         /// <summary>
-        /// Gets the CNMHomeComponent instance of the specified type.
+        /// Gets the <see cref="CNMHomeComponent"/>  instance of the specified type.
         /// </summary>
         /// <param name="type">The type to get.</param>
         /// <returns></returns>
@@ -255,25 +256,7 @@ namespace CommNetManagerAPI
                     log.debug("Skipping type " + type.Name);
                     continue;
                 }
-                CNMHomeComponent modularCommNetVesselInstance = null;
-                try
-                {
-                    modularCommNetVesselInstance = gameObject.AddComponent(type) as CNMHomeComponent;
-                    modularCommNetVesselInstance.PreInitialize(this);
-                }
-                catch (Exception ex)
-                {
-                    log.error("Encountered an exception while calling the constructor for " + type.Name);
-                    log.error(ex);
-                }
-                if (modularCommNetVesselInstance != null)
-                {
-                    Components.Add(modularCommNetVesselInstance);
-                    modularRefs.Add(type, modularCommNetVesselInstance);
-                    log.debug("Activated an instance of type: " + type.Name);
-                }
-                else
-                    log.warning("Failed to activate " + type.Name);
+                AttachComponent(type);
             }
             foreach (SequenceList<MethodInfo> methodList in methodsSequence.Values)
             {
@@ -306,6 +289,38 @@ namespace CommNetManagerAPI
                 }
             }
         }
+
+        /// <summary>
+        /// Attaches a <see cref="CNMHomeComponent"/>.
+        /// </summary>
+        /// <param name="componentType">Type of the component.</param>
+        /// <returns><c>true</c> if successful.</returns>
+        public bool AttachComponent(Type componentType)
+        {
+            CNMHomeComponent modularCommNetHomeInstance = null;
+            try
+            {
+                modularCommNetHomeInstance = gameObject.AddComponent(componentType) as CNMHomeComponent;
+                modularCommNetHomeInstance.CommNetHome = this;
+                modularCommNetHomeInstance.Initialize(this);
+            }
+            catch (Exception ex)
+            {
+                log.error("Encountered an exception while calling the constructor for " + componentType.Name);
+                log.error(ex);
+            }
+            if (modularCommNetHomeInstance != null)
+            {
+                Components.Add(modularCommNetHomeInstance);
+                modularRefs.Add(componentType, modularCommNetHomeInstance);
+                log.debug("Activated an instance of type: " + componentType.Name);
+                return true;
+            }
+            else
+                log.warning("Failed to activate " + componentType.Name);
+            return false;
+        }
+
         private void ParseDelegates(string methodName, MethodInfo method, CNMAttrSequence.options sequence)
         {
             CNMHomeComponent instance = modularRefs[methodTypes[method]];
@@ -346,52 +361,5 @@ namespace CommNetManagerAPI
                 log.error(ex);
             }
         }
-    }
-
-    /// <summary>
-    /// Derive from this class for CommNetManager to incorporate the methods into the CommNetHome.
-    /// </summary>
-    /// <seealso cref="UnityEngine.MonoBehaviour" />
-    public class CNMHomeComponent : MonoBehaviour
-    {
-        /// <summary>
-        /// The CommNetHome to which this component is attached.
-        /// </summary>
-        public CNMHome CommNetHome
-        {
-            get; protected internal set;
-        }
-        internal void PreInitialize(CNMHome home)
-        {
-            this.CommNetHome = home;
-            this.Initialize(home);
-        }
-        /// <summary>
-        /// Initializes the <see cref="CNMHomeComponent"/>.
-        /// </summary>
-        /// <param name="home">The linked CommNetHome.</param>
-        public virtual void Initialize(CNMHome home)
-        {
-        }
-        /*/// <summary>
-        /// Creates the CommNode.
-        /// </summary>
-        protected virtual void CreateNode() { }*/
-        /// <summary>
-        /// Called when network initialized.
-        /// </summary>
-        protected virtual void OnNetworkInitialized() { }
-        /// <summary>
-        /// Called when network pre update.
-        /// </summary>
-        protected virtual void OnNetworkPreUpdate() { }
-        /// <summary>
-        /// Start
-        /// </summary>
-        protected virtual void Start() { }
-        /// <summary>
-        /// Update
-        /// </summary>
-        protected virtual void Update() { }
     }
 }
