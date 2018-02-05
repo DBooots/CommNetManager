@@ -80,9 +80,9 @@ namespace CommNetManagerAPI
             {
                 if (CommNetManagerInstance_prop == null)
                 {
-                    CommNetManagerInstance_prop = CommNetManager.GetProperty("Instance", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
+                    CommNetManagerInstance_prop = CommNetManager.GetProperty("Instance", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.DeclaredOnly);
                 }
-                return CommNetManagerInstance_prop.GetValue(null, null) as CommNetNetwork;
+                return (CommNetNetwork)CommNetManagerInstance_prop.GetValue(null, null);
             }
             else
                 return null;
@@ -96,11 +96,11 @@ namespace CommNetManagerAPI
         {
             if (CommNetManagerInstalled)
             {
-                if (CommNetManagerInstance_prop == null)
+                if (CommNetManagerNetwork_prop == null)
                 {
-                    CommNetManagerInstance_prop = CommNetManager.GetProperty("CommNet", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+                    CommNetManagerNetwork_prop = CommNetManager.GetProperty("CommNet", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
                 }
-                return CommNetManagerInstance_prop.GetValue(null, null) as CommNetwork;
+                return (CommNetwork)CommNetManagerNetwork_prop.GetValue(GetCommNetManagerInstance(), null);
             }
             else
                 return null;
@@ -146,7 +146,7 @@ namespace CommNetManagerAPI
             CustomCommNetNetwork = null;
             //Replace the CommNet network
             CommNetNetwork stockNet = CommNetScenario.FindObjectOfType<CommNetNetwork>();
-
+            
             if (CommNetManagerInstalled)
             {
                 if (stockNet.GetType() == CommNetManager)
@@ -166,7 +166,7 @@ namespace CommNetManagerAPI
                 CustomCommNetNetwork = (CommNetNetwork)scenario.gameObject.AddComponent(derivativeOfCommNetNetwork);
             }
 
-            if (!(CustomCommNetNetwork == null))
+            if (CustomCommNetNetwork != null)
             {
                 UnityEngine.Object.Destroy(stockNet);
                 _commNetwork = CustomCommNetNetwork;

@@ -66,7 +66,7 @@ namespace CommNetManager
             return true;
         }
 
-        public static new CommNetManager Instance
+        new public static CommNetManager Instance
         {
             get;
             protected set;
@@ -75,6 +75,8 @@ namespace CommNetManager
         protected override void Awake()
         {
             CommNetNetwork.Instance = this;
+            CommNetManager.Instance = this;
+
             this.CommNet = new CommNetManagerNetwork();
 
             if (HighLogic.LoadedScene == GameScenes.TRACKSTATION)
