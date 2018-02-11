@@ -27,6 +27,7 @@ namespace CommNetManager
         private Dictionary<Type, CNMBodyComponent> modularRefs = new Dictionary<Type, CNMBodyComponent>();
         private static Dictionary<string, SequenceList<MethodInfo>> methodsSequence = new Dictionary<string, SequenceList<MethodInfo>>();
         private static bool methodsLoaded = false;
+        private bool componentsInitialized = false;
         private static List<Type> modularTypes = null;
 
         /// <summary>
@@ -56,7 +57,11 @@ namespace CommNetManager
         {
             if (!methodsLoaded)
                 LoadModularTypes();
-            this.InstantiateModularTypes();
+            if (!this.componentsInitialized)
+            {
+                this.InstantiateModularTypes();
+                componentsInitialized = true;
+            }
         }
         /// <summary>
         /// Gets the <see cref="CNMBodyComponent"/>  instance of the specified type.
@@ -112,6 +117,7 @@ namespace CommNetManager
             {
                 Destroy(Components[i]);
             }
+            GameEvents.CommNet.OnNetworkInitialized.Remove(this.OnNetworkInitialized);
             base.OnDestroy();
         }
         /// <summary>
@@ -157,7 +163,8 @@ namespace CommNetManager
             this.Initialize();
             if (CommNetNetwork.Initialized)
                 this.OnNetworkInitialized();
-            GameEvents.CommNet.OnNetworkInitialized.Add(new EventVoid.OnEvent(this.OnNetworkInitialized));
+            GameEvents.CommNet.OnNetworkInitialized.Add(this.OnNetworkInitialized);
+
             /*for (int i = 0; i < Sequence_Start.EarlyLate.Count; i++)
             {
                 try { Sequence_Start.EarlyLate[i].Invoke(); }
