@@ -4,7 +4,7 @@
     /// Derive from this class for CommNetManager to incorporate the methods into the CommNetBody.
     /// </summary>
     /// <seealso cref="UnityEngine.MonoBehaviour" />
-    public class CNMBodyComponent : UnityEngine.MonoBehaviour
+    public abstract class CNMBodyComponent : UnityEngine.MonoBehaviour
     {
         /// <summary>
         /// The CommNetBody to which this component is attached.

@@ -6,7 +6,7 @@ namespace CommNetManagerAPI
     /// Derive from this class for CommNetManager to incorporate the methods into the VesselModule.
     /// </summary>
     /// <seealso cref="UnityEngine.MonoBehaviour" />
-    public class ModularCommNetVesselComponent : UnityEngine.MonoBehaviour
+    public abstract class ModularCommNetVesselComponent : UnityEngine.MonoBehaviour
     {
         /// <summary>
         /// Per KSP VesselModule

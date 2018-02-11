@@ -4,7 +4,7 @@
     /// Derive from this class for CommNetManager to incorporate the methods into the CommNetHome.
     /// </summary>
     /// <seealso cref="UnityEngine.MonoBehaviour" />
-    public class CNMHomeComponent : UnityEngine.MonoBehaviour
+    public abstract class CNMHomeComponent : UnityEngine.MonoBehaviour
     {
         /// <summary>
         /// The CommNetHome to which this component is attached.
