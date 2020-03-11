@@ -89,7 +89,7 @@ namespace CommNetManagerAPI
         }
 
         /// <summary>
-        /// Gets the current instance of the CommNetManager. Can be cast to <see cref="ICommNetManager"/>.
+        /// Gets the current instance of the CommNet. Can be cast to <see cref="IPublicCommNet"/>.
         /// </summary>
         /// <returns>Null if CommNetManager is not installed.</returns>
         public static CommNetwork GetCommNetManagerNetwork()
@@ -188,8 +188,7 @@ namespace CommNetManagerAPI
         /// <returns>True if CommNetManager or the supplied Net was instantiated, False if not.</returns>
         public static bool SetCommNetManagerIfAvailable(this CommNetScenario scenario, Type derivativeOfCommNetNetwork)
         {
-            CommNetNetwork throwaway;
-            return SetCommNetManagerIfAvailable(scenario, derivativeOfCommNetNetwork, out throwaway);
+            return SetCommNetManagerIfAvailable(scenario, derivativeOfCommNetNetwork, out _);
         }
 
         /// <summary>
@@ -202,7 +201,7 @@ namespace CommNetManagerAPI
         {
             CustomCommNetNetwork = null;
             //Replace the CommNet network
-            CommNetNetwork stockNet = CommNetScenario.FindObjectOfType<CommNetNetwork>();
+            CommNetNetwork stockNet = UnityEngine.Object.FindObjectOfType<CommNetNetwork>();
 
             if (CommNetManagerInstalled)
             {
@@ -237,8 +236,7 @@ namespace CommNetManagerAPI
         /// <returns>True if CommNetManager or the supplied Net was instantiated, False if not.</returns>
         public static bool SetCommNetManagerIfAvailable(this CommNetScenario scenario)
         {
-            CommNetNetwork throwaway;
-            return SetCommNetManagerIfAvailable(scenario, out throwaway);
+            return SetCommNetManagerIfAvailable(scenario, out _);
         }
     }
 }

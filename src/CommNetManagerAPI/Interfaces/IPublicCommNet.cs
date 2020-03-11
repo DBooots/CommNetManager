@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace CommNetManagerAPI
 {
     /// <summary>
-    /// Public implementation of many protected methods. Cast a CommNetManager instance to this interface to call these methods.
+    /// Public implementation of many protected methods. Cast a CommNetManagerNetwork instance to this interface to call these methods.
     /// <para />USE WITH CAUTION.
     /// </summary>
     public interface IPublicCommNet
