@@ -33,23 +33,23 @@ namespace CommNetManager
         /// <summary>
         /// The altitude of this station.
         /// </summary>
-        public double Alt { get { return this.alt; } }
+        public double Alt { get { return this.alt; } set { this.alt = value; } }
         /// <summary>
         /// The longitude of this station.
         /// </summary>
-        public double Lon { get { return this.lon; } }
+        public double Lon { get { return this.lon; } set { this.lon = value; } }
         /// <summary>
         /// The latitude of this station.
         /// </summary>
-        public double Lat { get { return this.lat; } }
+        public double Lat { get { return this.lat; } set { this.lat = value; } }
         /// <summary>
         /// The <see cref="CelestialBody"/> on which this Home is located.
         /// </summary>
-        public CelestialBody Body { get { return this.body; } }
+        public CelestialBody Body { get { return this.body; } set { this.body = value; } }
         /// <summary>
         /// The <see cref="CommNet.CommNode"/> attached to this Home.
         /// </summary>
-        public CommNet.CommNode Comm { get { return this.comm; } }
+        public CommNet.CommNode Comm { get { return this.comm; } set { this.comm = value; } }
 
         /// <summary>
         /// Initializes this instance based on the specified stock home.
