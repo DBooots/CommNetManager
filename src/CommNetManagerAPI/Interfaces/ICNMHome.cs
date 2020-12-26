@@ -17,23 +17,23 @@ namespace CommNetManagerAPI
         /// <summary>
         /// The altitude of this station.
         /// </summary>
-        double Alt { get; }
+        double Alt { get; set; }
         /// <summary>
         /// The longitude of this station.
         /// </summary>
-        double Lon { get; }
+        double Lon { get; set; }
         /// <summary>
         /// The latitude of this station.
         /// </summary>
-        double Lat { get; }
+        double Lat { get; set; }
         /// <summary>
         /// The <see cref="CelestialBody"/> on which this Home is located.
         /// </summary>
-        CelestialBody Body { get; }
+        CelestialBody Body { get; set; }
         /// <summary>
         /// The <see cref="CommNet.CommNode"/> attached to this Home.
         /// </summary>
-        CommNet.CommNode Comm { get; }
+        CommNet.CommNode Comm { get; set; }
 
         /// <summary>
         /// Initializes this instance based on the specified stock home.
