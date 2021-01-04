@@ -3,3 +3,5 @@ src/CommNetManager/bin/
 src/CommNetManager/obj/
 src/CommNetManagerAPI/bin/
 src/CommNetManagerAPI/obj/
+CommNetManager_*.zip
+CommNetManagerAPI Distribution_*.zip
