@@ -240,7 +240,7 @@
         </member>
         <member name="M:CommNetManagerAPI.CommNetManagerChecker.GetCommNetManagerNetwork">
             <summary>
-            Gets the current instance of the CommNetManager. Can be cast to <see cref="T:CommNetManagerAPI.ICommNetManager"/>.
+            Gets the current instance of the CommNet. Can be cast to <see cref="T:CommNetManagerAPI.IPublicCommNet"/>.
             </summary>
             <returns>Null if CommNetManager is not installed.</returns>
         </member>
@@ -618,7 +618,7 @@
         </member>
         <member name="T:CommNetManagerAPI.IPublicCommNet">
             <summary>
-            Public implementation of many protected methods. Cast a CommNetManager instance to this interface to call these methods.
+            Public implementation of many protected methods. Cast a CommNetManagerNetwork instance to this interface to call these methods.
             <para />USE WITH CAUTION.
             </summary>
         </member>
