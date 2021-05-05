@@ -171,7 +171,8 @@ namespace CommNetManager
         /// </summary>
         protected override void Start()
         {
-            this.body = this.GetComponentInParent<CelestialBody>();
+            if (this.GetComponentInParent<CelestialBody>() != null)
+                this.body = this.GetComponentInParent<CelestialBody>();
             if ((UnityEngine.Object)this.nodeTransform == (UnityEngine.Object)null)
                 this.nodeTransform = this.transform;
             this.Initialize();
